@@ -274,6 +274,7 @@ public class ChartView extends View
         /*paint.setStrokeWidth(2);
         paint.setStyle(Paint.Style.STROKE);
         canvas.drawPath(path, paint);*/
+        canvas.translate(0, -mChartEntity.fontHeightX);
         paint.setStrokeWidth(2);
         paint.setStyle(Paint.Style.STROKE);
         measurePath();
@@ -311,14 +312,14 @@ public class ChartView extends View
                 float valueY = mChartEntity.chartHeight * (item.getValue() - mValueEntity.min) / deltaValue;
 
                 currentPointX = startX + valueIndex * unitX;
-                currentPointY = -valueY - mChartEntity.fontHeightX;
+                currentPointY = -valueY;
             }
             if (Float.isNaN(previousPointX)) {
                 //是否是第一个点
                 if (valueIndex > 0) {
                     ChartItem preItem = currentDrawingItems.get(valueIndex - 1);
                     previousPointX = startX + (valueIndex - 1) * unitX;
-                    previousPointY = -mChartEntity.chartHeight * (preItem.getValue() - mValueEntity.min) / deltaValue - mChartEntity.fontHeightX;
+                    previousPointY = -mChartEntity.chartHeight * (preItem.getValue() - mValueEntity.min) / deltaValue;
                 } else {
                     //是的话就用当前点表示上一个点
                     previousPointX = currentPointX;
@@ -332,7 +333,7 @@ public class ChartView extends View
                     ChartItem prePreItem = currentDrawingItems.get(valueIndex - 2);
                     //Point point = mPointList.get(valueIndex - 2);
                     prePreviousPointX = startX + (valueIndex - 2) * unitX;
-                    prePreviousPointY = -mChartEntity.chartHeight * (prePreItem.getValue() - mValueEntity.min) / deltaValue - mChartEntity.fontHeightX;
+                    prePreviousPointY = -mChartEntity.chartHeight * (prePreItem.getValue() - mValueEntity.min) / deltaValue;
                 } else {
                     //是的话就用当前点表示上上个点
                     prePreviousPointX = previousPointX;
@@ -346,8 +347,8 @@ public class ChartView extends View
                 float valueY = mChartEntity.chartHeight * (lastItem.getValue() - mValueEntity.min) / deltaValue;
 
                 //Point point = mPointList.get(valueIndex + 1);
-                nextPointX = startX + valueIndex * unitX;
-                nextPointY = -valueY - mChartEntity.fontHeightX;
+                nextPointX = startX + (valueIndex + 1) * unitX;
+                nextPointY = -valueY;
             } else {
                 //是的话就用当前点表示下一个点
                 nextPointX = currentPointX;
