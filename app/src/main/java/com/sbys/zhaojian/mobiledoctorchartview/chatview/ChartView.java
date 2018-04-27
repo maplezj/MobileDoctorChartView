@@ -191,8 +191,13 @@ public class ChartView extends View
         for (int i = 0; i < Y_COUNT; i++)
         {
             String stringY = String.format("%.1f", startY + i * unitY);
-            canvas.drawText(stringY, 0, (float) (mChartEntity.chartHeight * (1 - i / ((Y_COUNT-1) * 1.0))), paint);
+            canvas.drawText(stringY, 0, (float) (mChartEntity.chartHeight * (1 - i / (Y_COUNT-1.0))), paint);
         }
+        //画正常值基准线
+        float lowY = mChartEntity.chartHeight * (1 - ((mValueEntity.normalLow - mValueEntity.min) / (mValueEntity.max - mValueEntity.min)));
+        canvas.drawLine(mChartEntity.fontHeightY, lowY, mChartEntity.chartWidth + mChartEntity.fontHeightY, lowY, paint);
+        float heightY = mChartEntity.chartHeight * (1 - ((mValueEntity.normalHigh - mValueEntity.min) / (mValueEntity.max - mValueEntity.min)));
+        canvas.drawLine(mChartEntity.fontHeightY, heightY, mChartEntity.chartWidth + mChartEntity.fontHeightY, heightY, paint);
     }
 
     /**
