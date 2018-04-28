@@ -99,7 +99,7 @@ public class ChartView extends View
             }
             else
             {
-                currentDrawingItemsList.add(chartItems.subList(0, ChartEntity.X_COUNT));
+                currentDrawingItemsList.add(chartItems.subList(chartItems.size()-X_COUNT, chartItems.size()));
             }
         }
         updateValueEntity();
@@ -605,6 +605,7 @@ public class ChartView extends View
             List<ChartItem> chartItems = mChartItemListList.get(0);
             List<ChartItem> currentDrawingItems = currentDrawingItemsList.get(0);
 
+            Log.d(TAG, "end:xDistance------>" + mChartEntity.xDistance + "|total：" + mChartEntity.chartWidth * (chartItems.size() - X_COUNT) / (X_COUNT - 1.0));
             return chartItems.size() <= X_COUNT
                     || currentDrawingItems.get(currentDrawingItems.size() - 1).equals(chartItems.get(chartItems.size() - 1)) && mChartEntity.xDistance >= mChartEntity.chartWidth * (chartItems.size() - X_COUNT) / (X_COUNT - 1.0);
         }
@@ -652,6 +653,8 @@ public class ChartView extends View
         public static final int X_COUNT = 7;
         /*y轴刻度数量*/
         public static final int Y_COUNT = 6;
+        /*是否已经初始化（只初始化一次）*/
+        boolean isInit = false;
 
         /*总宽度*/
         float totalWidth;
@@ -691,6 +694,11 @@ public class ChartView extends View
             chartHeight = totalHeight - 2 * padding - fontHeightX;
             unitX = chartWidth / (X_COUNT - 1);
             unitY = chartHeight / (Y_COUNT - 1);
+            if (!isInit)
+            {
+                isInit = true;
+                mChartEntity.xDistance = (float) (mChartEntity.chartWidth * (mChartItemListList.get(0).size() - X_COUNT) / (X_COUNT - 1.0));
+            }
         }
     }
 
