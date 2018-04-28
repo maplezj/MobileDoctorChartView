@@ -9,8 +9,14 @@ import android.support.annotation.NonNull;
 public class ChartItem implements Comparable<ChartItem>
 {
     public static final int TYPE_NORMAL = 0;
-    public static final int TYPE_ONE = 1;
-    public static final int TYPE_TWO = 2;
+    /*X轴不重复的曲线1*/
+    public static final int TYPE_SINGLE_ONE = 1;
+    /*X轴不重复的曲线2*/
+    public static final int TYPE_SINGLE_TWO = 2;
+    /*X轴重复的曲线1*/
+    public static final int TYPE_MULTI_ONE = 3;
+    /*X轴重复的曲线2*/
+    public static final int TYPE_MULTI_TWO = 4;
     private float value;
     private String date;
     private int type;
