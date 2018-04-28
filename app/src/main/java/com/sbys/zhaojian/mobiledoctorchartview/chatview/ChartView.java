@@ -40,12 +40,12 @@ public class ChartView extends View
 
     private Paint paint = new Paint();
     private Path mPath = new Path();
-
-    //private List<ChartItem> mChartItemList;
+    private Path mAssistPath;
+    private float lineSmoothness = 0.13f;
+    private PathMeasure mPathMeasure;
     /*多条线的数据*/
     private List<List<ChartItem>> mChartItemListList = new ArrayList<>();
     private DefaultValueEntity mValueEntity = new DefaultValueEntity();
-    //private List<ChartItem> currentDrawingItems;
     /*当前绘制中的多条数据*/
     private List<List<ChartItem>> currentDrawingItemsList = new ArrayList<>();
     private ChartEntity mChartEntity = new ChartEntity();
@@ -102,8 +102,6 @@ public class ChartView extends View
                 currentDrawingItemsList.add(chartItems.subList(0, ChartEntity.X_COUNT));
             }
         }
-
-
         updateValueEntity();
     }
 
@@ -132,8 +130,32 @@ public class ChartView extends View
         }
     }
 
+    /**
+     * 数据校验
+     * @param chartItemListList
+     * @param type
+     * @return
+     */
     private boolean checkValidate(List<List<ChartItem>> chartItemListList, int type)
     {
+        if (chartItemListList == null || chartItemListList.isEmpty())
+        {
+            return false;
+        }
+        if (type == CHART_TYPE_PRESSURE)
+        {
+            if (chartItemListList.size() != 2)
+            {
+                Log.d(TAG, "checkValidate: 血压数据必须为2条");
+                return false;
+            }
+            else if (chartItemListList.get(0).size() != chartItemListList.get(1).size())
+            {
+                Log.d(TAG, "checkValidate: 血压大的两条数据长度必须一致");
+                return false;
+            }
+            return true;
+        }
         return true;
     }
 
@@ -272,24 +294,15 @@ public class ChartView extends View
         canvas.saveLayer(-30, -mChartEntity.padding - mChartEntity.chartHeight - mChartEntity.fontHeightX,
                 mChartEntity.chartWidth + 30,
                 0, null, Canvas.CLIP_TO_LAYER_SAVE_FLAG);
-        //drawPointDate(canvas, unitX, startX, deltaValue);
         drawDate(canvas, unitX, startX);
 
         for (List<ChartItem> currentDrawingItems : currentDrawingItemsList)
         {
-            //List<ChartItem> currentDrawingItems = mChartItemListList.get(0);
             //画X轴单位及点
             if (currentDrawingItems == null || currentDrawingItems.isEmpty())
             {
                 return;
             }
-            /*if (type == CHART_TYPE_PRESSURE)
-            {
-                drawPressurePointDate(canvas, unitX, startX, deltaValue);
-            }
-            else
-            {
-            }*/
             paint.setStyle(Paint.Style.FILL);
             drawPoint(currentDrawingItems, canvas, unitX, startX, deltaValue);
             //画曲线
@@ -319,8 +332,6 @@ public class ChartView extends View
     private void drawPoint(List<ChartItem> currentDrawingItems, Canvas canvas, int unitX, float startX, float deltaValue)
     {
         //画点
-        //List<ChartItem> currentDrawingItems = currentDrawingItemsList.get(0);
-
         canvas.saveLayer(0, -mChartEntity.padding - mChartEntity.chartHeight - mChartEntity.fontHeightX,
                 mChartEntity.chartWidth,
                 6, null, Canvas.CLIP_TO_LAYER_SAVE_FLAG);
@@ -343,30 +354,6 @@ public class ChartView extends View
         }
     }
 
-    /**
-     * 画点与日期
-     */
-    private void drawPointDate(Canvas canvas, int unitX, float startX, float deltaValue)
-    {
-        List<ChartItem> currentDrawingItems = currentDrawingItemsList.get(0);
-        for (int i = 0; currentDrawingItems.size() > i; i++)
-        {
-            ChartItem current = currentDrawingItems.get(i);
-            //画日期
-            canvas.drawText(current.getDate(), startX + i * unitX - calculateFontWith(current.getDate()) / 2, 0, paint);
-        }
-
-        //画点
-        canvas.saveLayer(0, -mChartEntity.padding - mChartEntity.chartHeight - mChartEntity.fontHeightX,
-                mChartEntity.chartWidth,
-                6, null, Canvas.CLIP_TO_LAYER_SAVE_FLAG);
-        for (int i = 0; currentDrawingItems.size() > i; i++)
-        {
-            ChartItem current = currentDrawingItems.get(i);
-            float valueY = mChartEntity.chartHeight * (current.getValue() - mValueEntity.min) / deltaValue;
-            canvas.drawCircle(startX + i * unitX, -valueY - mChartEntity.fontHeightX, 5, paint);
-        }
-    }
 
     private List<List<ChartItem>> createLists(List<ChartItem> currentDrawingItems)
     {
@@ -411,10 +398,6 @@ public class ChartView extends View
         }
         return lists;
     }
-
-    private Path mAssistPath;
-    private float lineSmoothness = 0.13f;
-    private PathMeasure mPathMeasure;
 
     private void measurePath(List<ChartItem> items)
     {

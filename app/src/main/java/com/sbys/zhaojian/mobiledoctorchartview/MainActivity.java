@@ -19,8 +19,8 @@ public class MainActivity extends Activity
         setContentView(R.layout.activity_main);
         ChartView chartView = findViewById(R.id.chatView);
         //drawDouble(chartView);
-        drawDoubleSpecial(chartView);
-        //drawSingle(chartView);
+        //drawDoubleSpecial(chartView);
+        drawSingle(chartView);
     }
 
     /**
