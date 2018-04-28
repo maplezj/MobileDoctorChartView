@@ -14,11 +14,18 @@ public class ChartItem implements Comparable<ChartItem>
     private float value;
     private String date;
     private int type;
+    private int index;
 
     public ChartItem(float value, String date)
     {
+        this(value, date, TYPE_NORMAL);
+    }
+
+    public ChartItem(float value, String date, int type)
+    {
         this.value = value;
         this.date = date;
+        this.type = type;
     }
 
     public float getValue()
@@ -29,6 +36,21 @@ public class ChartItem implements Comparable<ChartItem>
     public String getDate()
     {
         return date;
+    }
+
+    public int getType()
+    {
+        return type;
+    }
+
+    public int getIndex()
+    {
+        return index;
+    }
+
+    public void setIndex(int index)
+    {
+        this.index = index;
     }
 
     @Override

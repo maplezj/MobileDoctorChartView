@@ -13,6 +13,7 @@ import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.view.View;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -57,7 +58,6 @@ public class ChartView extends View
     private void initView()
     {
         mGestureDetector = new GestureDetector(mGestureListener);
-
     }
 
     public void setData(List<ChartItem> chartItemList, int type)
@@ -110,7 +110,7 @@ public class ChartView extends View
     private void updateData()
     {
         resetValueEntity();
-        int outCount = (int) Math.ceil((mChartEntity.xDistance+0.001)/mChartEntity.unitX);
+        int outCount = (int) Math.ceil((mChartEntity.xDistance + 0.001) / mChartEntity.unitX);
         if (mChartItemList.size() > X_COUNT + outCount)
         {
             currentDrawingItems = mChartItemList.subList(outCount - 1, outCount + X_COUNT);
@@ -191,7 +191,7 @@ public class ChartView extends View
         for (int i = 0; i < Y_COUNT; i++)
         {
             String stringY = String.format("%.1f", startY + i * unitY);
-            canvas.drawText(stringY, 0, (float) (mChartEntity.chartHeight * (1 - i / (Y_COUNT-1.0))), paint);
+            canvas.drawText(stringY, 0, (float) (mChartEntity.chartHeight * (1 - i / (Y_COUNT - 1.0))), paint);
         }
         //画正常值基准线
         float lowY = mChartEntity.chartHeight * (1 - ((mValueEntity.normalLow - mValueEntity.min) / (mValueEntity.max - mValueEntity.min)));
@@ -210,10 +210,10 @@ public class ChartView extends View
         paint.setStyle(Paint.Style.STROKE);
         paint.setColor(Color.WHITE);
         paint.setStrokeWidth(2);
-        canvas.translate(mChartEntity.startX,mChartEntity.startY);
+        canvas.translate(mChartEntity.startX, mChartEntity.startY);
         Path path = new Path();
-        path.moveTo(0,0);
-        path.lineTo(0,mChartEntity.chartHeight);
+        path.moveTo(0, 0);
+        path.lineTo(0, mChartEntity.chartHeight);
         path.lineTo(mChartEntity.chartWidth, mChartEntity.chartHeight);
         canvas.drawPath(path, paint);
     }
@@ -233,18 +233,18 @@ public class ChartView extends View
         float deltaValue = mValueEntity.max - mValueEntity.min;
         float startX = -mChartEntity.xDistance % unitX;
 
-        canvas.saveLayer(-30, -mChartEntity.padding - mChartEntity.chartHeight-mChartEntity.fontHeightX,
+        canvas.saveLayer(-30, -mChartEntity.padding - mChartEntity.chartHeight - mChartEntity.fontHeightX,
                 mChartEntity.chartWidth + 30,
                 0, null, Canvas.CLIP_TO_LAYER_SAVE_FLAG);
         for (int i = 0; currentDrawingItems.size() > i; i++)
         {
             ChartItem current = currentDrawingItems.get(i);
             //画日期
-            canvas.drawText(current.getDate(), startX + i * unitX-calculateFontWith(current.getDate())/2, 0, paint);
+            canvas.drawText(current.getDate(), startX + i * unitX - calculateFontWith(current.getDate()) / 2, 0, paint);
         }
 
         //画点及曲线
-        canvas.saveLayer(0, -mChartEntity.padding - mChartEntity.chartHeight-mChartEntity.fontHeightX,
+        canvas.saveLayer(0, -mChartEntity.padding - mChartEntity.chartHeight - mChartEntity.fontHeightX,
                 mChartEntity.chartWidth,
                 6, null, Canvas.CLIP_TO_LAYER_SAVE_FLAG);
         Path dst = new Path();
@@ -277,23 +277,77 @@ public class ChartView extends View
         /*paint.setStrokeWidth(2);
         paint.setStyle(Paint.Style.STROKE);
         canvas.drawPath(path, paint);*/
+
+        //绘制线
         canvas.translate(0, -mChartEntity.fontHeightX);
         paint.setStrokeWidth(2);
         paint.setStyle(Paint.Style.STROKE);
-        measurePath();
-        float distance = mPathMeasure.getLength();
-        if (mPathMeasure.getSegment(0, distance, dst, true)) {
-            //绘制线
-            canvas.drawPath(dst, paint);
-
+        List<List<ChartItem>> itemsList = createLists();
+        if (itemsList == null || itemsList.isEmpty())
+        {
+            return;
         }
+        for (List<ChartItem> chartItems : itemsList)
+        {
+            measurePath(chartItems);
+            float distance = mPathMeasure.getLength();
+            if (mPathMeasure.getSegment(0, distance, dst, true))
+            {
+                canvas.drawPath(dst, paint);
+            }
+        }
+    }
+
+    private List<List<ChartItem>> createLists()
+    {
+        if (currentDrawingItems == null || currentDrawingItems.isEmpty())
+        {
+            return null;
+        }
+        List<List<ChartItem>> lists = new ArrayList<>();
+        List<ChartItem> normalList = new ArrayList<>();
+        List<ChartItem> typeOneList = new ArrayList<>();
+        List<ChartItem> typeTwoList = new ArrayList<>();
+        for (int i = 0; i < currentDrawingItems.size(); i++)
+        {
+            ChartItem currentDrawingItem = currentDrawingItems.get(i);
+            currentDrawingItem.setIndex(i);
+            switch (currentDrawingItem.getType())
+            {
+                case ChartItem.TYPE_NORMAL:
+                    normalList.add(currentDrawingItem);
+                    break;
+                case ChartItem.TYPE_ONE:
+                    typeOneList.add(currentDrawingItem);
+                    break;
+                case ChartItem.TYPE_TWO:
+                    typeTwoList.add(currentDrawingItem);
+                    break;
+                default:
+                    break;
+            }
+        }
+        if (!normalList.isEmpty())
+        {
+            lists.add(normalList);
+        }
+        if (!typeOneList.isEmpty())
+        {
+            lists.add(typeOneList);
+        }
+        if (!typeTwoList.isEmpty())
+        {
+            lists.add(typeTwoList);
+        }
+        return lists;
     }
 
     private Path mAssistPath;
     private float lineSmoothness = 0.13f;
     private PathMeasure mPathMeasure;
 
-    private void measurePath() {
+    private void measurePath(List<ChartItem> items)
+    {
         mPath = new Path();
         mAssistPath = new Path();
         float prePreviousPointX = Float.NaN;
@@ -305,39 +359,50 @@ public class ChartView extends View
         float nextPointX;
         float nextPointY;
 
-        final int lineSize = currentDrawingItems.size();
+        final int lineSize = items.size();
         int unitX = (int) mChartEntity.unitX;
         float deltaValue = mValueEntity.max - mValueEntity.min;
         float startX = -mChartEntity.xDistance % unitX;
-        for (int valueIndex = 0; valueIndex < lineSize; ++valueIndex) {
-            if (Float.isNaN(currentPointX)) {
-                ChartItem item = currentDrawingItems.get(valueIndex);
-                float valueY = mChartEntity.chartHeight * (item.getValue() - mValueEntity.min) / deltaValue;
+        for (int valueIndex = 0; valueIndex < lineSize; ++valueIndex)
+        {
+            ChartItem currentItem = items.get(valueIndex);
 
-                currentPointX = startX + valueIndex * unitX;
+            if (Float.isNaN(currentPointX))
+            {
+                float valueY = mChartEntity.chartHeight * (currentItem.getValue() - mValueEntity.min) / deltaValue;
+
+                currentPointX = startX + currentItem.getIndex() * unitX;
                 currentPointY = -valueY;
             }
-            if (Float.isNaN(previousPointX)) {
+            if (Float.isNaN(previousPointX))
+            {
                 //是否是第一个点
-                if (valueIndex > 0) {
-                    ChartItem preItem = currentDrawingItems.get(valueIndex - 1);
-                    previousPointX = startX + (valueIndex - 1) * unitX;
+                if (valueIndex > 0)
+                {
+                    ChartItem preItem = items.get(valueIndex - 1);
+                    previousPointX = startX + (currentItem.getIndex() - preItem.getIndex()) * unitX;
                     previousPointY = -mChartEntity.chartHeight * (preItem.getValue() - mValueEntity.min) / deltaValue;
-                } else {
+                }
+                else
+                {
                     //是的话就用当前点表示上一个点
                     previousPointX = currentPointX;
                     previousPointY = currentPointY;
                 }
             }
 
-            if (Float.isNaN(prePreviousPointX)) {
+            if (Float.isNaN(prePreviousPointX))
+            {
                 //是否是前两个点
-                if (valueIndex > 1) {
-                    ChartItem prePreItem = currentDrawingItems.get(valueIndex - 2);
+                if (valueIndex > 1)
+                {
+                    ChartItem prePreItem = items.get(valueIndex - 2);
                     //Point point = mPointList.get(valueIndex - 2);
-                    prePreviousPointX = startX + (valueIndex - 2) * unitX;
+                    prePreviousPointX = startX + (currentItem.getIndex() - prePreItem.getIndex()) * unitX;
                     prePreviousPointY = -mChartEntity.chartHeight * (prePreItem.getValue() - mValueEntity.min) / deltaValue;
-                } else {
+                }
+                else
+                {
                     //是的话就用当前点表示上上个点
                     prePreviousPointX = previousPointX;
                     prePreviousPointY = previousPointY;
@@ -345,24 +410,30 @@ public class ChartView extends View
             }
 
             // 判断是不是最后一个点了
-            if (valueIndex < lineSize - 1) {
-                ChartItem lastItem = currentDrawingItems.get(valueIndex +1);
+            if (valueIndex < lineSize - 1)
+            {
+                ChartItem lastItem = items.get(valueIndex + 1);
                 float valueY = mChartEntity.chartHeight * (lastItem.getValue() - mValueEntity.min) / deltaValue;
 
                 //Point point = mPointList.get(valueIndex + 1);
-                nextPointX = startX + (valueIndex + 1) * unitX;
+                nextPointX = startX + (lastItem.getIndex()) * unitX;
                 nextPointY = -valueY;
-            } else {
+            }
+            else
+            {
                 //是的话就用当前点表示下一个点
                 nextPointX = currentPointX;
                 nextPointY = currentPointY;
             }
 
-            if (valueIndex == 0) {
+            if (valueIndex == 0)
+            {
                 // 将Path移动到开始点
                 mPath.moveTo(currentPointX, currentPointY);
                 mAssistPath.moveTo(currentPointX, currentPointY);
-            } else {
+            }
+            else
+            {
                 // 求出控制点坐标
                 final float firstDiffX = (currentPointX - prePreviousPointX);
                 final float firstDiffY = (currentPointY - prePreviousPointY);
@@ -404,7 +475,7 @@ public class ChartView extends View
         //心率取10的倍数
         if (type == CHART_TYPE_HEART)
         {
-            return (float) (Math.ceil(value/10)*10);
+            return (float) (Math.ceil(value / 10) * 10);
         }
         /*其他取整*/
         else
@@ -418,7 +489,7 @@ public class ChartView extends View
         //心率取10的倍数
         if (type == CHART_TYPE_HEART)
         {
-            return (float) (Math.floor(value/10)*10);
+            return (float) (Math.floor(value / 10) * 10);
         }
         /*其他取整*/
         else
@@ -427,9 +498,8 @@ public class ChartView extends View
         }
     }
 
-    private GestureDetector.OnGestureListener mGestureListener = new GestureDetector.OnGestureListener() {
-
-
+    private GestureDetector.OnGestureListener mGestureListener = new GestureDetector.OnGestureListener()
+    {
         @Override
         public boolean onDown(MotionEvent e)
         {
@@ -484,23 +554,22 @@ public class ChartView extends View
             return currentDrawingItems.get(0).equals(mChartItemList.get(0)) && mChartEntity.xDistance <= 0;
         }
 
-        /**
-         * 指标切换 在touch down后又没有滑动（onScroll），又没有长按（onLongPress），然后Touchup时触发
-         */
         @Override
-        public boolean onSingleTapUp(MotionEvent event) {
+        public boolean onSingleTapUp(MotionEvent event)
+        {
             return false;
         }
 
         @Override
-        public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {
+        public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY)
+        {
             return false;
         }
 
         @Override
-        public void onLongPress(MotionEvent e) {
+        public void onLongPress(MotionEvent e)
+        {
         }
-
     };
 
     private static class DefaultValueEntity
@@ -547,9 +616,9 @@ public class ChartView extends View
         {
             totalHeight = getHeight();
             totalWidth = getWidth();
-            padding = totalWidth/15;
-            fontHeightY = totalWidth/15;
-            fontHeightX = totalWidth/30;
+            padding = totalWidth / 15;
+            fontHeightY = totalWidth / 15;
+            fontHeightX = totalWidth / 30;
             startX = fontHeightY + padding;
             startY = padding;
             chartWidth = totalWidth - 2 * (padding + fontHeightY);
