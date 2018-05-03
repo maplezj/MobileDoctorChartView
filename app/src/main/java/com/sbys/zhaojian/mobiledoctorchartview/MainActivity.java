@@ -18,6 +18,7 @@ public class MainActivity extends Activity
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         ChartView chartView = findViewById(R.id.chatView);
+        chartView.setEmpty(ChartView.CHART_TYPE_HEART);
         //drawDouble(chartView);
         //drawDoubleSpecial(chartView);
         //drawSingle(chartView);

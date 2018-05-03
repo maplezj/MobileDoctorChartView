@@ -60,8 +60,13 @@ public class ChartView extends View
 
     private void initView()
     {
-        resetValueEntity();
         mGestureDetector = new GestureDetector(mGestureListener);
+    }
+
+    public void setEmpty(int type)
+    {
+        this.type = type;
+        resetValueEntity();
     }
 
     public void setData(List<ChartItem> chartItemList, int type)
