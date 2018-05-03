@@ -60,6 +60,7 @@ public class ChartView extends View
 
     private void initView()
     {
+        resetValueEntity();
         mGestureDetector = new GestureDetector(mGestureListener);
     }
 
@@ -694,7 +695,7 @@ public class ChartView extends View
             chartHeight = totalHeight - 2 * padding - fontHeightX;
             unitX = chartWidth / (X_COUNT - 1);
             unitY = chartHeight / (Y_COUNT - 1);
-            if (!isInit)
+            if (!isInit && mChartItemListList != null && !mChartItemListList.isEmpty())
             {
                 isInit = true;
                 mChartEntity.xDistance = (float) (mChartEntity.chartWidth * (mChartItemListList.get(0).size() - X_COUNT) / (X_COUNT - 1.0));

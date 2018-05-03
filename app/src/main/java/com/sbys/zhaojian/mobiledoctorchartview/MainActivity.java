@@ -20,7 +20,7 @@ public class MainActivity extends Activity
         ChartView chartView = findViewById(R.id.chatView);
         //drawDouble(chartView);
         //drawDoubleSpecial(chartView);
-        drawSingle(chartView);
+        //drawSingle(chartView);
     }
 
     /**
