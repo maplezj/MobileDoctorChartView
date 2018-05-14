@@ -698,7 +698,8 @@ public class ChartView extends View
             startY = padding;
             chartWidth = totalWidth - 2 * (padding + fontHeightY);
             chartHeight = totalHeight - 2 * padding - fontHeightX;
-            unitX = chartWidth / (X_COUNT - 1);
+            unitX = (int)chartWidth / (X_COUNT - 1);
+            chartWidth = unitX * (X_COUNT - 1);
             unitY = chartHeight / (Y_COUNT - 1);
             if (!isInit && mChartItemListList != null && !mChartItemListList.isEmpty())
             {
