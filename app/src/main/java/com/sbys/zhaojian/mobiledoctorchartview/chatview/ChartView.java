@@ -232,7 +232,7 @@ public class ChartView extends View
         mChartEntity.init();
         drawWrapper(canvas, paint);
         drawUnit(canvas, paint);
-        drawLine(canvas, paint);
+        drawLine(canvas);
     }
 
     @Override
@@ -283,7 +283,7 @@ public class ChartView extends View
         canvas.drawPath(path, paint);
     }
 
-    private void drawLine(Canvas canvas, Paint paint)
+    private void drawLine(Canvas canvas)
     {
         if (mChartItemListList == null || mChartItemListList.isEmpty())
         {
@@ -312,8 +312,8 @@ public class ChartView extends View
             paint.setStyle(Paint.Style.FILL);
             drawPoint(currentDrawingItems, canvas, unitX, startX, deltaValue);
             //画曲线
-            Path dst = new Path();
-            dst.rLineTo(startX, -mChartEntity.chartHeight * (currentDrawingItems.get(0).getValue() - mValueEntity.min) / deltaValue - mChartEntity.fontHeightX);
+//            mPath.reset();
+//            mPath.rLineTo(startX, -mChartEntity.chartHeight * (currentDrawingItems.get(0).getValue() - mValueEntity.min) / deltaValue - mChartEntity.fontHeightX);
             canvas.translate(0, -mChartEntity.fontHeightX);
             paint.setStrokeWidth(2);
             paint.setStyle(Paint.Style.STROKE);
@@ -324,13 +324,16 @@ public class ChartView extends View
             }
             for (List<ChartItem> subChartItems : itemsList)
             {
+                mPath.reset();
+                setPaintColorByType(subChartItems.get(0).getType());
                 measurePath(subChartItems);
                 float distance = mPathMeasure.getLength();
-                if (mPathMeasure.getSegment(0, distance, dst, true))
+                if (mPathMeasure.getSegment(0, distance, mPath, true))
                 {
-                    canvas.drawPath(dst, paint);
+                    canvas.drawPath(mPath, paint);
                 }
             }
+            paint.setColor(Color.WHITE);
         }
 
     }
@@ -345,8 +348,10 @@ public class ChartView extends View
         {
             ChartItem current = currentDrawingItems.get(i);
             float valueY = mChartEntity.chartHeight * (current.getValue() - mValueEntity.min) / deltaValue;
+            setPaintColorByType(current.getType());
             canvas.drawCircle(startX + i * unitX, -valueY - mChartEntity.fontHeightX, 5, paint);
         }
+        paint.setColor(Color.WHITE);
     }
 
     private void drawDate(Canvas canvas, int unitX, float startX)
@@ -359,6 +364,25 @@ public class ChartView extends View
             canvas.drawText(current.getDate(), startX + i * unitX - calculateFontWith(current.getDate()) / 2, 0, paint);
         }
     }
+    public void setPaintColorByType(int type)
+    {
+        switch (type)
+        {
+            case ChartItem.TYPE_NORMAL:
+                paint.setColor(Color.WHITE);
+                break;
+            case ChartItem.TYPE_SINGLE_ONE:
+                paint.setColor(0xFF57e3ff);
+                break;
+            case ChartItem.TYPE_SINGLE_TWO:
+                paint.setColor(0xFFfff29b);
+                break;
+            default:
+                paint.setColor(Color.WHITE);
+                break;
+        }
+    }
+
 
 
     private List<List<ChartItem>> createLists(List<ChartItem> currentDrawingItems)
