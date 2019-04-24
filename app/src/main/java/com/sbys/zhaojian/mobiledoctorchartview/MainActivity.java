@@ -21,7 +21,7 @@ public class MainActivity extends Activity
         chartView.setEmpty(ChartView.CHART_TYPE_HEART);
         //drawDouble(chartView);
         //drawDoubleSpecial(chartView);
-        //drawSingle(chartView);
+        drawSingle(chartView);
     }
 
     /**
@@ -39,7 +39,7 @@ public class MainActivity extends Activity
         chartItems.add(new ChartItem(80, "11/15"));
         chartItems.add(new ChartItem(50, "11/16"));
         chartItems.add(new ChartItem(110, "11/17"));
-        chartItems.add(new ChartItem(40, "11/18"));
+        chartItems.add(new ChartItem(49, "11/18"));
         chartItems.add(new ChartItem(120, "11/19"));
         chartItems.add(new ChartItem(70, "11/20"));
         chartView.setData(chartItems, ChartView.CHART_TYPE_HEART);

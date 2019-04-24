@@ -9,7 +9,6 @@
     <com.sbys.zhaojian.mobiledoctorchartview.chatview.ChartView
         android:layout_width="match_parent"
         android:layout_height="200dp"
-        android:background="#28CCCF"
         android:id="@+id/chatView"/>
 
 </android.support.constraint.ConstraintLayout>
