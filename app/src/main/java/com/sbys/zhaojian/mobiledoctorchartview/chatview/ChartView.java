@@ -14,9 +14,14 @@ import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.view.View;
 
+import com.sbys.loggerlib.Logger;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+
+import static  com.sbys.zhaojian.mobiledoctorchartview.chatview.ChartView.ChartEntity.X_COUNT;
+import static   com.sbys.zhaojian.mobiledoctorchartview.chatview.ChartView.ChartEntity.Y_COUNT;
 
 /**
  * Created by zhaojian on 2018/4/26.
@@ -68,6 +73,7 @@ public class ChartView extends View {
 
     public void setData(List<ChartItem> chartItemList, int type) {
         if (chartItemList == null) {
+            Logger.d("data is null");
         }
         List<List<ChartItem>> chartItemListList = new ArrayList<>();
         chartItemListList.add(chartItemList);
@@ -81,6 +87,7 @@ public class ChartView extends View {
 
     private void setMultiData(List<List<ChartItem>> chartItemListList, int type) {
         if (checkValidate(chartItemListList, type)) {
+            Logger.d("list size:" + chartItemListList.size() + "|type:" + type);
             this.type = type;
             initData(chartItemListList);
         }
@@ -95,14 +102,14 @@ public class ChartView extends View {
         mChartItemListList.addAll(chartItemListList);
         resetValueEntity();
         for (List<ChartItem> chartItems : chartItemListList) {
-            if (chartItems.size() <= ChartEntity.X_COUNT) {
+            if (chartItems.size() <= X_COUNT) {
                 currentDrawingItemsList.add(chartItems);
                 if (xShowCount < chartItems.size()) {
                     xShowCount = chartItems.size();
                 }
             } else {
-                currentDrawingItemsList.add(chartItems.subList(chartItems.size() - ChartEntity.X_COUNT, chartItems.size()));
-                xShowCount = ChartEntity.X_COUNT;
+                currentDrawingItemsList.add(chartItems.subList(chartItems.size() - X_COUNT, chartItems.size()));
+                xShowCount = X_COUNT;
             }
         }
         updateValueEntity();
@@ -138,6 +145,7 @@ public class ChartView extends View {
      */
     private boolean checkValidate(List<List<ChartItem>> chartItemListList, int type) {
         if (chartItemListList == null) {
+            Logger.d("data is null");
             return false;
         }
         if (type == CHART_TYPE_PRESSURE) {
@@ -145,8 +153,10 @@ public class ChartView extends View {
                 return true;
             }
             if (chartItemListList.size() != 2) {
+                Logger.d("checkValidate: 血压数据必须为2条" + "|size:" + chartItemListList.size());
                 return false;
             } else if (chartItemListList.get(0).size() != chartItemListList.get(1).size()) {
+                Logger.d("checkValidate: 血压大的两条数据长度必须一致");
                 return false;
             }
             return true;
@@ -159,9 +169,9 @@ public class ChartView extends View {
         int outCount = (int) Math.ceil((mChartEntity.xDistance + 0.001) / mChartEntity.unitX);
         for (int i = 0; i < mChartItemListList.size(); i++) {
             List<ChartItem> chartItems = mChartItemListList.get(i);
-            if (chartItems.size() > ChartEntity.X_COUNT + outCount) {
+            if (chartItems.size() > X_COUNT + outCount) {
                 currentDrawingItemsList.remove(i);
-                currentDrawingItemsList.add(i, chartItems.subList(outCount - 1, outCount + ChartEntity.X_COUNT));
+                currentDrawingItemsList.add(i, chartItems.subList(outCount - 1, outCount + X_COUNT));
             } else {
                 currentDrawingItemsList.remove(i);
                 currentDrawingItemsList.add(i, chartItems.subList(outCount - 1, chartItems.size()));
@@ -231,10 +241,10 @@ public class ChartView extends View {
         canvas.translate(-mChartEntity.fontHeightY, 0);
         //画Y轴单位
         float startY = mValueEntity.min;
-        float unitY = (mValueEntity.max - mValueEntity.min) / (ChartEntity.Y_COUNT - 1);
-        for (int i = 0; i < ChartEntity.Y_COUNT; i++) {
+        float unitY = (mValueEntity.max - mValueEntity.min) / (Y_COUNT - 1);
+        for (int i = 0; i < Y_COUNT; i++) {
             String stringY = String.format("%.1f", startY + i * unitY);
-            canvas.drawText(stringY, 0, (float) (mChartEntity.chartHeight * (1 - i / (ChartEntity.Y_COUNT - 1.0))), paint);
+            canvas.drawText(stringY, 0, (float) (mChartEntity.chartHeight * (1 - i / (Y_COUNT - 1.0))), paint);
         }
         //画正常值基准线
         DashPathEffect dashPathEffect = new DashPathEffect(new float[]{16, 8, 16, 8}, 0);
@@ -562,7 +572,7 @@ public class ChartView extends View {
         public boolean onDown(MotionEvent e) {
             if (onClickPointListener == null)
             {
-                return true;
+                return false;
             }
             int range = 50;
             float eventX = e.getX() - mChartEntity.startX;
@@ -595,12 +605,15 @@ public class ChartView extends View {
          */
         @Override
         public boolean onScroll(MotionEvent e1, MotionEvent e2, float distanceX, float distanceY) {
+            Logger.d("onScroll-----------------> distanceX:" + distanceX + "|distanceY" + distanceY);
             //如果向右滑动，并且已经滑动到最后一个，则不让滑动
             if (distanceX > 0 && isEnd()) {
+                Logger.d("onScroll-----------------> is end");
                 return true;
             }
             //如果向左滑动，并且已经滑动到第一个，则不让滑动
             if (distanceX < 0 && isStart()) {
+                Logger.d("onScroll------------------> is start");
                 return true;
             }
             mChartEntity.xDistance = mChartEntity.xDistance + distanceX;
@@ -619,8 +632,8 @@ public class ChartView extends View {
             List<ChartItem> chartItems = mChartItemListList.get(0);
             List<ChartItem> currentDrawingItems = currentDrawingItemsList.get(0);
 
-            return chartItems.size() <= ChartEntity.X_COUNT
-                    || currentDrawingItems.get(currentDrawingItems.size() - 1).equals(chartItems.get(chartItems.size() - 1)) && mChartEntity.xDistance >= mChartEntity.chartWidth * (chartItems.size() - ChartEntity.X_COUNT) / (ChartEntity.X_COUNT - 1.0);
+            return chartItems.size() <= X_COUNT
+                    || currentDrawingItems.get(currentDrawingItems.size() - 1).equals(chartItems.get(chartItems.size() - 1)) && mChartEntity.xDistance >= mChartEntity.chartWidth * (chartItems.size() - X_COUNT) / (X_COUNT - 1.0);
         }
 
         private boolean isStart() {
