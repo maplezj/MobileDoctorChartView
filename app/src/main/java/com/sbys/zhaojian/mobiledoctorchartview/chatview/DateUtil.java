@@ -90,7 +90,7 @@ public class DateUtil
     {
         if (!TextUtils.isEmpty(dateString)) {
             try {
-                getDateString(getDate(dateString, "M/d HH:mm"), "M-d");
+                return getDateString(getDate(dateString, "M/d HH:mm"), "M-d");
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -102,7 +102,7 @@ public class DateUtil
     {
         if (!TextUtils.isEmpty(dateString)) {
             try {
-                getDateString(getDate(dateString, "M/d HH:mm"), "HH:mm");
+                return getDateString(getDate(dateString, "M/d HH:mm:ss"), "HH:mm:ss");
             } catch (Exception e) {
                 e.printStackTrace();
             }

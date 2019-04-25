@@ -1,6 +1,8 @@
 package com.sbys.zhaojian.mobiledoctorchartview.chatview;
 
 import android.content.Context;
+import android.graphics.Paint;
+import android.graphics.Rect;
 
 import java.util.List;
 
@@ -32,4 +34,19 @@ public class CommonUtil
     public static boolean isListEmpty(List list) {
         return list == null || list.size() == 0;
     }
+
+    public static float calculateFontHeight(Paint paint)
+    {
+        Rect bounds = new Rect();
+        paint.getTextBounds("s", 0, "s".length(), bounds);
+        return bounds.height();
+    }
+
+    public static float calculateFontWidth(Paint paint, String font)
+    {
+        Rect bounds = new Rect();
+        paint.getTextBounds(font, 0, font.length(), bounds);
+        return bounds.width();
+    }
+
 }

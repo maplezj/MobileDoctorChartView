@@ -19,8 +19,6 @@ public class ChartItem implements Comparable<ChartItem>
     private String date;
     private int type;
     private int index;
-    private int jcly;//监测来源
-    private int pos;//点的角标
 
     public ChartItem(float value, String date)
     {
@@ -36,25 +34,9 @@ public class ChartItem implements Comparable<ChartItem>
         this.type = type;
     }
 
-    public int getPos() {
-        return pos;
-    }
-
-    public void setPos(int pos) {
-        this.pos = pos;
-    }
-
     public float getValue()
     {
         return value;
-    }
-
-    public int getJcly() {
-        return jcly;
-    }
-
-    public void setJcly(int jcly) {
-        this.jcly = jcly;
     }
 
     public String getDate()

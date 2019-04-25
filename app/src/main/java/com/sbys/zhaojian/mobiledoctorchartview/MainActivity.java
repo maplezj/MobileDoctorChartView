@@ -19,9 +19,9 @@ public class MainActivity extends Activity
         setContentView(R.layout.activity_main);
         ChartView chartView = findViewById(R.id.chatView);
         chartView.setEmpty(ChartView.CHART_TYPE_HEART);
-        //drawDouble(chartView);
+        drawDouble(chartView);
         //drawDoubleSpecial(chartView);
-        drawSingle(chartView);
+        //drawSingle(chartView);
     }
 
     /**
@@ -32,16 +32,16 @@ public class MainActivity extends Activity
     {
         ArrayList<ChartItem> chartItems = new ArrayList<>();
 
-        chartItems.add(new ChartItem(100, "11/11"));
-        chartItems.add(new ChartItem(80, "11/12"));
-        chartItems.add(new ChartItem(50, "11/13"));
-        chartItems.add(new ChartItem(60, "11/14"));
-        chartItems.add(new ChartItem(80, "11/15"));
-        chartItems.add(new ChartItem(50, "11/16"));
-        chartItems.add(new ChartItem(110, "11/17"));
-        chartItems.add(new ChartItem(49, "11/18"));
-        chartItems.add(new ChartItem(120, "11/19"));
-        chartItems.add(new ChartItem(70, "11/20"));
+        chartItems.add(new ChartItem(100, "11/11 14:22:33"));
+        chartItems.add(new ChartItem(80, "11/12 14:22"));
+        chartItems.add(new ChartItem(50, "11/13 14:22"));
+        chartItems.add(new ChartItem(60, "11/14 14:22"));
+        chartItems.add(new ChartItem(80, "11/15 14:22"));
+        chartItems.add(new ChartItem(50, "11/16 14:22"));
+        chartItems.add(new ChartItem(110, "11/17 14:22"));
+        chartItems.add(new ChartItem(40, "11/18 14:22"));
+        chartItems.add(new ChartItem(120, "11/19 14:22:55"));
+        chartItems.add(new ChartItem(70, "11/20 14:22"));
         chartView.setData(chartItems, ChartView.CHART_TYPE_HEART);
     }
 
