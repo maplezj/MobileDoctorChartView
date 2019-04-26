@@ -633,16 +633,39 @@ public class ChartView extends View {
          */
         @Override
         public boolean onScroll(MotionEvent e1, MotionEvent e2, float distanceX, float distanceY) {
-            Logger.d("onScroll-----------------> distanceX:" + distanceX + "|distanceY" + distanceY);
+            Log.d("---","onScroll-----------------> distanceX:" + distanceX + "|distanceY" + distanceY);
+            if (mChartConfig.mMoveType == MoveType.TYPE_LINE)
+            {
+                scrollLine(distanceX);
+            }
+            else
+            {
+                scrollVerticalLine();
+            }
+            return true;
+        }
+
+        private void scrollVerticalLine()
+        {
+            if (!mChartConfig.showVerticalLine)
+            {
+                return;
+            }
+
+
+        }
+
+        private void scrollLine(float distanceX)
+        {
             //如果向右滑动，并且已经滑动到最后一个，则不让滑动
             if (distanceX > 0 && isEnd()) {
                 Logger.d("onScroll-----------------> is end");
-                return true;
+                return;
             }
             //如果向左滑动，并且已经滑动到第一个，则不让滑动
             if (distanceX < 0 && isStart()) {
                 Logger.d("onScroll------------------> is start");
-                return true;
+                return;
             }
             mChartConfig.xDistance = mChartConfig.xDistance + distanceX;
             if (mChartConfig.xDistance < 0) {
@@ -650,7 +673,6 @@ public class ChartView extends View {
             }
             updateData();
             postInvalidate();
-            return true;
         }
 
         private boolean isEnd() {
@@ -744,6 +766,14 @@ public class ChartView extends View {
         TYPE_NUM, TYPE_DATE
     }
 
+    public enum MoveType
+    {
+        /*曲线*/
+        TYPE_LINE,
+        /*垂直线*/
+        TYPE_VERTIAL_LINE
+    }
+
     static class ChartConfig
     {
 
@@ -776,6 +806,10 @@ public class ChartView extends View {
         int countY = DEFAULT_Y_COUNT;
         /*X轴上的单位类型*/
         private UnitType xUnitType = UnitType.TYPE_DATE;
+        /*竖线提示*/
+        private boolean showVerticalLine = false;
+        /*滑动模式*/
+        private MoveType mMoveType = MoveType.TYPE_LINE;
 
         /*总宽度*/
         float totalWidth;
@@ -909,6 +943,19 @@ public class ChartView extends View {
         public ChartConfigBuilder setUnitXType(UnitType unitType)
         {
             mChartConfig.xUnitType = unitType;
+            return this;
+        }
+
+        public ChartConfigBuilder showVertialLine(boolean show)
+        {
+            mChartConfig.showVerticalLine = show;
+            return this;
+        }
+
+        /*设置滑动模式*/
+        public ChartConfigBuilder setMoveType(MoveType moveType)
+        {
+            mChartConfig.mMoveType = moveType;
             return this;
         }
 
