@@ -8,6 +8,7 @@ import android.graphics.DashPathEffect;
 import android.graphics.Paint;
 import android.graphics.Path;
 import android.graphics.PathMeasure;
+import android.text.TextUtils;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.GestureDetector;
@@ -20,8 +21,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import static  com.sbys.zhaojian.mobiledoctorchartview.chatview.ChartView.ChartEntity.X_COUNT;
-import static   com.sbys.zhaojian.mobiledoctorchartview.chatview.ChartView.ChartEntity.Y_COUNT;
 
 /**
  * Created by zhaojian on 2018/4/26.
@@ -55,7 +54,7 @@ public class ChartView extends View {
     private DefaultValueEntity mValueEntity = new DefaultValueEntity();
     /*当前绘制中的多条数据*/
     private List<List<ChartItem>> currentDrawingItemsList = new ArrayList<>();
-    private ChartEntity mChartEntity = new ChartEntity();
+    private ChartConfig mChartConfig = new ChartConfig();
     private GestureDetector mGestureDetector;
     private int type;
     private int xShowCount = 0;
@@ -72,6 +71,11 @@ public class ChartView extends View {
 
     public void setEmpty(int type) {
         setMultiData(new ArrayList<List<ChartItem>>(), type);
+    }
+
+    public void setConfig(ChartConfig config)
+    {
+        mChartConfig = config;
     }
 
     public void setData(List<ChartItem> chartItemList, int type) {
@@ -99,20 +103,20 @@ public class ChartView extends View {
     private void initData(List<List<ChartItem>> chartItemListList) {
         currentDrawingItemsList.clear();
         mChartItemListList.clear();
-        mChartEntity.isInit = false;
+        mChartConfig.isInit = false;
         xShowCount = 0;
 
         mChartItemListList.addAll(chartItemListList);
         resetValueEntity();
         for (List<ChartItem> chartItems : chartItemListList) {
-            if (chartItems.size() <= X_COUNT) {
+            if (chartItems.size() <= mChartConfig.countX) {
                 currentDrawingItemsList.add(chartItems);
                 if (xShowCount < chartItems.size()) {
                     xShowCount = chartItems.size();
                 }
             } else {
-                currentDrawingItemsList.add(chartItems.subList(chartItems.size() - X_COUNT, chartItems.size()));
-                xShowCount = X_COUNT;
+                currentDrawingItemsList.add(chartItems.subList(chartItems.size() - mChartConfig.countX, chartItems.size()));
+                xShowCount = mChartConfig.countX;
             }
         }
         updateValueEntity();
@@ -169,12 +173,12 @@ public class ChartView extends View {
 
     private void updateData() {
         resetValueEntity();
-        int outCount = (int) Math.ceil((mChartEntity.xDistance + 0.001) / mChartEntity.unitXDistance);
+        int outCount = (int) Math.ceil((mChartConfig.xDistance + 0.001) / mChartConfig.unitXDistance);
         for (int i = 0; i < mChartItemListList.size(); i++) {
             List<ChartItem> chartItems = mChartItemListList.get(i);
-            if (chartItems.size() > X_COUNT + outCount) {
+            if (chartItems.size() > mChartConfig.countX + outCount) {
                 currentDrawingItemsList.remove(i);
-                currentDrawingItemsList.add(i, chartItems.subList(outCount - 1, outCount + X_COUNT));
+                currentDrawingItemsList.add(i, chartItems.subList(outCount - 1, outCount + mChartConfig.countX));
             } else {
                 currentDrawingItemsList.remove(i);
                 currentDrawingItemsList.add(i, chartItems.subList(outCount - 1, chartItems.size()));
@@ -223,20 +227,20 @@ public class ChartView extends View {
 
     @Override
     protected void onDraw(Canvas canvas) {
-        mChartEntity.init(mValueEntity);
+        mChartConfig.init(mValueEntity, this);
         drawWrapper(canvas);
-        drawXUnit(canvas);
         drawYUnit(canvas);
+        drawXUnit(canvas);
         drawLine(canvas);
         drawPoint(canvas);
     }
 
     private void drawPoint(Canvas canvas)
     {
-        int unitX = (int) mChartEntity.unitXDistance;
-        float startX = -mChartEntity.xDistance % unitX;
-        canvas.saveLayer(-14, -ChartEntity.DEFAULT_PADDING - mChartEntity.chartHeight - mChartEntity.fontHeightX,
-                mChartEntity.chartWidth + 14, mChartEntity.fontHeightX + ChartEntity.DEFAULT_PADDING, null, Canvas.ALL_SAVE_FLAG);
+        int unitX = (int) mChartConfig.unitXDistance;
+        float startX = -mChartConfig.xDistance % unitX;
+        canvas.saveLayer(-14, -ChartConfig.DEFAULT_PADDING - mChartConfig.chartHeight - mChartConfig.fontHeightX,
+                mChartConfig.chartWidth + 14, mChartConfig.fontHeightX + ChartConfig.DEFAULT_PADDING, null, Canvas.ALL_SAVE_FLAG);
         for (List<ChartItem> currentDrawingItems : currentDrawingItemsList) {
             //画X轴单位及点
             if (currentDrawingItems == null || currentDrawingItems.isEmpty()) {
@@ -254,21 +258,19 @@ public class ChartView extends View {
     }
 
 
-    private void drawYUnit(Canvas canvas)
+    private void drawXUnit(Canvas canvas)
     {
         paint.setPathEffect(null);
         if (mChartItemListList == null || mChartItemListList.isEmpty()) {
             return;
         }
 
-        canvas.translate(0, mChartEntity.chartHeight);
+        canvas.translate(0, mChartConfig.chartHeight);
         paint.setStyle(Paint.Style.FILL);
 
-        int unitX = (int) mChartEntity.unitXDistance;
-        float startX = -mChartEntity.xDistance % unitX;
-        canvas.saveLayer(-mChartEntity.fontWidthX/2, -ChartEntity.DEFAULT_PADDING - mChartEntity.chartHeight - mChartEntity.fontHeightX,
-                mChartEntity.chartWidth + mChartEntity.fontWidthX/2,
-                mChartEntity.fontHeightX + ChartEntity.DEFAULT_PADDING, null, Canvas.ALL_SAVE_FLAG);
+        int unitX = (int) mChartConfig.unitXDistance;
+        float startX = -mChartConfig.xDistance % unitX;
+
         drawDate(canvas, unitX, startX);
         canvas.restore();
     }
@@ -281,32 +283,38 @@ public class ChartView extends View {
     /**
      * 画单位
      */
-    private void drawXUnit(Canvas canvas) {
+    private void drawYUnit(Canvas canvas) {
         paint.setFakeBoldText(false);
-        paint.setTextSize(ChartEntity.DEFAULT_FONT_SIZE);
+        paint.setTextSize(ChartConfig.DEFAULT_FONT_SIZE);
         paint.setStrokeWidth(0);
         paint.setTextAlign(Paint.Align.RIGHT);
         paint.setColor(COLOR_TEXT);
         //画Y轴单位
         float startY = mValueEntity.min;
-        float unitY = (mValueEntity.max - mValueEntity.min) / (Y_COUNT - 1);
-        for (int i = 0; i < Y_COUNT; i++) {
+        float unitY = (mValueEntity.max - mValueEntity.min) / (mChartConfig.countY - 1);
+        for (int i = 0; i < mChartConfig.countY; i++) {
             String stringY = String.format("%.1f", startY + i * unitY);
-            canvas.drawText(stringY,-10, (float) (mChartEntity.chartHeight * (1 - i / (Y_COUNT - 1.0))), paint);
+            canvas.drawText(stringY,-10, (float) (mChartConfig.chartHeight * (1 - i / (mChartConfig.countY - 1.0))), paint);
         }
+
+        if (!TextUtils.isEmpty(mChartConfig.unitYText))
+        {
+            canvas.drawText(mChartConfig.unitYText, -10, -unitY - ChartConfig.FONT_PADDING, paint);
+        }
+
         //画正常值基准线
         paint.setColor(COLOR_DASH_LINE);
         DashPathEffect dashPathEffect = new DashPathEffect(new float[]{12, 6, 12, 6}, 0);
         paint.setPathEffect(dashPathEffect);
-        float lowY = mChartEntity.chartHeight * (1 - ((mValueEntity.normalLow - mValueEntity.min) / (mValueEntity.max - mValueEntity.min)));
+        float lowY = mChartConfig.chartHeight * (1 - ((mValueEntity.normalLow - mValueEntity.min) / (mValueEntity.max - mValueEntity.min)));
         Path path1 = new Path();
         path1.moveTo(0, lowY);
-        path1.lineTo(mChartEntity.chartWidth, lowY);
+        path1.lineTo(mChartConfig.chartWidth, lowY);
         canvas.drawPath(path1, paint);
-        float heightY = mChartEntity.chartHeight * (1 - ((mValueEntity.normalHigh - mValueEntity.min) / (mValueEntity.max - mValueEntity.min)));
+        float heightY = mChartConfig.chartHeight * (1 - ((mValueEntity.normalHigh - mValueEntity.min) / (mValueEntity.max - mValueEntity.min)));
         Path path2 = new Path();
         path2.moveTo(0, heightY);
-        path2.lineTo(mChartEntity.chartWidth, heightY);
+        path2.lineTo(mChartConfig.chartWidth, heightY);
         canvas.drawPath(path2, paint);
     }
 
@@ -319,18 +327,18 @@ public class ChartView extends View {
         paint.setFakeBoldText(false);
         paint.setStyle(Paint.Style.STROKE);
         paint.setStrokeWidth(3);
-        canvas.translate(mChartEntity.startX, mChartEntity.startY);
+        canvas.translate(mChartConfig.startX, mChartConfig.startY);
         Path path = new Path();
         path.moveTo(0, 0);
-        path.lineTo(0, mChartEntity.chartHeight);
-        path.lineTo(mChartEntity.chartWidth, mChartEntity.chartHeight);
+        path.lineTo(0, mChartConfig.chartHeight);
+        path.lineTo(mChartConfig.chartWidth, mChartConfig.chartHeight);
         canvas.drawPath(path, paint);
     }
 
     @SuppressLint("WrongConstant")
     private void drawLine(Canvas canvas) {
-        canvas.saveLayer(0, -ChartEntity.DEFAULT_PADDING - mChartEntity.chartHeight - mChartEntity.fontHeightX,
-                mChartEntity.chartWidth, mChartEntity.fontHeightX + ChartEntity.DEFAULT_PADDING, null, Canvas.ALL_SAVE_FLAG);
+        canvas.saveLayer(0, -ChartConfig.DEFAULT_PADDING - mChartConfig.chartHeight - mChartConfig.fontHeightX,
+                mChartConfig.chartWidth, mChartConfig.fontHeightX + ChartConfig.DEFAULT_PADDING, null, Canvas.ALL_SAVE_FLAG);
         for (List<ChartItem> currentDrawingItems : currentDrawingItemsList) {
             //画X轴单位及点
             if (currentDrawingItems == null || currentDrawingItems.isEmpty()) {
@@ -364,15 +372,15 @@ public class ChartView extends View {
     {
         paint.setStyle(Paint.Style.FILL);
         showingItems = currentDrawingItems;
-        paint.setColor(Color.WHITE);
 
         //如果只有一条，画在中间
         if (xShowCount == 1)
         {
             ChartItem current = currentDrawingItems.get(0);
-            float valueY = mChartEntity.chartHeight * (current.getValue() - mValueEntity.min) / deltaValue;
+            float valueY = mChartConfig.chartHeight * (current.getValue() - mValueEntity.min) / deltaValue;
             setPaintColorByType(current.getType());
             canvas.drawCircle(startX + unitX, -valueY, 12, paint);
+            paint.setColor(Color.WHITE);
             canvas.drawCircle(startX + unitX, -valueY, 6, paint);
             return;
         }
@@ -381,9 +389,10 @@ public class ChartView extends View {
         for (int i = 0; currentDrawingItems.size() > i; i++)
         {
             ChartItem current = currentDrawingItems.get(i);
-            float valueY = mChartEntity.chartHeight * (current.getValue() - mValueEntity.min) / deltaValue;
+            float valueY = mChartConfig.chartHeight * (current.getValue() - mValueEntity.min) / deltaValue;
             setPaintColorByType(current.getType());
             canvas.drawCircle(startX + i * unitX, -valueY, 12, paint);
+            paint.setColor(Color.WHITE);
             canvas.drawCircle(startX + i * unitX, -valueY, 6, paint);
         }
         paint.setColor(Color.BLACK);
@@ -391,14 +400,35 @@ public class ChartView extends View {
 
     private void drawDate(Canvas canvas, int unitX, float startX) {
         List<ChartItem> currentDrawingItems = currentDrawingItemsList.get(0);
-        paint.setTextAlign(Paint.Align.CENTER);
+        paint.setTextAlign(Paint.Align.LEFT);
         paint.setColor(COLOR_TEXT);
+
+        canvas.saveLayer(-mChartConfig.fontWidthX / 2, -ChartConfig.DEFAULT_PADDING - mChartConfig.chartHeight - mChartConfig.fontHeightX,
+                mChartConfig.chartWidth + mChartConfig.fontWidthX / 2 + mChartConfig.unitXWidth + ChartConfig.FONT_PADDING,
+                mChartConfig.fontHeightX + ChartConfig.DEFAULT_PADDING, null, Canvas.ALL_SAVE_FLAG);
+        if (!TextUtils.isEmpty(mChartConfig.unitXText))
+        {
+            canvas.drawText(mChartConfig.unitXText, mChartConfig.chartWidth + +mChartConfig.fontWidthX / 2 + ChartConfig.FONT_PADDING, mChartConfig.fontHeightX / 2 + 30, paint);
+        }
+        canvas.restore();
+        paint.setTextAlign(Paint.Align.CENTER);
+        canvas.saveLayer(-mChartConfig.fontWidthX / 2, -ChartConfig.DEFAULT_PADDING - mChartConfig.chartHeight - mChartConfig.fontHeightX,
+                mChartConfig.chartWidth + mChartConfig.fontWidthX / 2,
+                mChartConfig.fontHeightX + ChartConfig.DEFAULT_PADDING, null, Canvas.ALL_SAVE_FLAG);
+
         //如果只有一条，画在中间
         if (xShowCount == 1) {
             ChartItem current = currentDrawingItems.get(0);
             //画日期
-            canvas.drawText(DateUtil.getDateDay(current.getDate()), startX + unitX, mChartEntity.fontHeightX / 2, paint);
-            canvas.drawText(DateUtil.getDateHour(current.getDate()), startX + unitX , mChartEntity.fontHeightX, paint);
+            if (mChartConfig.xUnitType == UnitType.TYPE_NUM)
+            {
+                canvas.drawText(current.getDate(), startX + unitX, mChartConfig.fontHeightX / 2, paint);
+            }
+            else
+            {
+                canvas.drawText(DateUtil.getDateDay(current.getDate()), startX + unitX, mChartConfig.fontHeightX / 2, paint);
+                canvas.drawText(DateUtil.getDateHour(current.getDate()), startX + unitX , mChartConfig.fontHeightX, paint);
+            }
             return;
         }
 
@@ -406,9 +436,17 @@ public class ChartView extends View {
         for (int i = 0; currentDrawingItems.size() > i; i++) {
             ChartItem current = currentDrawingItems.get(i);
             //画日期
-            canvas.drawText(DateUtil.getDateDay(current.getDate()), startX + i * unitX, mChartEntity.fontHeightX / 2+20, paint);
-            canvas.drawText(DateUtil.getDateHour(current.getDate()), startX + i * unitX, mChartEntity.fontHeightX + 30, paint);
+            if (mChartConfig.xUnitType == UnitType.TYPE_NUM)
+            {
+                canvas.drawText(current.getDate(), startX + i * unitX, mChartConfig.fontHeightX / 2+30, paint);
+            }
+            else
+            {
+                canvas.drawText(DateUtil.getDateDay(current.getDate()), startX + i * unitX, mChartConfig.fontHeightX / 2+20, paint);
+                canvas.drawText(DateUtil.getDateHour(current.getDate()), startX + i * unitX, mChartConfig.fontHeightX + 30, paint);
+            }
         }
+
     }
 
     private List<List<ChartItem>> createLists(List<ChartItem> currentDrawingItems) {
@@ -468,14 +506,14 @@ public class ChartView extends View {
         float nextPointY;
 
         final int lineSize = items.size();
-        int unitX = (int) mChartEntity.unitXDistance;
+        int unitX = (int) mChartConfig.unitXDistance;
         float deltaValue = mValueEntity.max - mValueEntity.min;
-        float startX = -mChartEntity.xDistance % unitX;
+        float startX = -mChartConfig.xDistance % unitX;
         for (int valueIndex = 0; valueIndex < lineSize; ++valueIndex) {
             ChartItem currentItem = items.get(valueIndex);
 
             if (Float.isNaN(currentPointX)) {
-                float valueY = mChartEntity.chartHeight * (currentItem.getValue() - mValueEntity.min) / deltaValue;
+                float valueY = mChartConfig.chartHeight * (currentItem.getValue() - mValueEntity.min) / deltaValue;
 
                 currentPointX = startX + currentItem.getIndex() * unitX;
                 currentPointY = -valueY;
@@ -485,7 +523,7 @@ public class ChartView extends View {
                 if (valueIndex > 0) {
                     ChartItem preItem = items.get(valueIndex - 1);
                     previousPointX = startX + (currentItem.getIndex() - preItem.getIndex()) * unitX;
-                    previousPointY = -mChartEntity.chartHeight * (preItem.getValue() - mValueEntity.min) / deltaValue;
+                    previousPointY = -mChartConfig.chartHeight * (preItem.getValue() - mValueEntity.min) / deltaValue;
                 } else {
                     //是的话就用当前点表示上一个点
                     previousPointX = currentPointX;
@@ -499,7 +537,7 @@ public class ChartView extends View {
                     ChartItem prePreItem = items.get(valueIndex - 2);
                     //Point point = mPointList.get(valueIndex - 2);
                     prePreviousPointX = startX + (currentItem.getIndex() - prePreItem.getIndex()) * unitX;
-                    prePreviousPointY = -mChartEntity.chartHeight * (prePreItem.getValue() - mValueEntity.min) / deltaValue;
+                    prePreviousPointY = -mChartConfig.chartHeight * (prePreItem.getValue() - mValueEntity.min) / deltaValue;
                 } else {
                     //是的话就用当前点表示上上个点
                     prePreviousPointX = previousPointX;
@@ -510,7 +548,7 @@ public class ChartView extends View {
             // 判断是不是最后一个点了
             if (valueIndex < lineSize - 1) {
                 ChartItem lastItem = items.get(valueIndex + 1);
-                float valueY = mChartEntity.chartHeight * (lastItem.getValue() - mValueEntity.min) / deltaValue;
+                float valueY = mChartConfig.chartHeight * (lastItem.getValue() - mValueEntity.min) / deltaValue;
 
                 //Point point = mPointList.get(valueIndex + 1);
                 nextPointX = startX + (lastItem.getIndex()) * unitX;
@@ -606,9 +644,9 @@ public class ChartView extends View {
                 Logger.d("onScroll------------------> is start");
                 return true;
             }
-            mChartEntity.xDistance = mChartEntity.xDistance + distanceX;
-            if (mChartEntity.xDistance < 0) {
-                mChartEntity.xDistance = 0;
+            mChartConfig.xDistance = mChartConfig.xDistance + distanceX;
+            if (mChartConfig.xDistance < 0) {
+                mChartConfig.xDistance = 0;
             }
             updateData();
             postInvalidate();
@@ -622,8 +660,8 @@ public class ChartView extends View {
             List<ChartItem> chartItems = mChartItemListList.get(0);
             List<ChartItem> currentDrawingItems = currentDrawingItemsList.get(0);
 
-            return chartItems.size() <= X_COUNT
-                    || currentDrawingItems.get(currentDrawingItems.size() - 1).equals(chartItems.get(chartItems.size() - 1)) && mChartEntity.xDistance >= mChartEntity.chartWidth * (chartItems.size() - X_COUNT) / (X_COUNT - 1.0);
+            return chartItems.size() <= mChartConfig.countX
+                    || currentDrawingItems.get(currentDrawingItems.size() - 1).equals(chartItems.get(chartItems.size() - 1)) && mChartConfig.xDistance >= mChartConfig.chartWidth * (chartItems.size() - mChartConfig.countX) / (mChartConfig.countX - 1.0);
         }
 
         private boolean isStart() {
@@ -632,7 +670,7 @@ public class ChartView extends View {
             }
             List<ChartItem> chartItems = mChartItemListList.get(0);
             List<ChartItem> currentDrawingItems = currentDrawingItemsList.get(0);
-            return currentDrawingItems.get(0).equals(chartItems.get(0)) && mChartEntity.xDistance <= 0;
+            return currentDrawingItems.get(0).equals(chartItems.get(0)) && mChartConfig.xDistance <= 0;
         }
 
         @Override
@@ -643,15 +681,15 @@ public class ChartView extends View {
                 return true;
             }
             int range = 50;
-            float eventX = event.getX() - mChartEntity.startX;
-            float eventY = event.getY() - mChartEntity.startY - mChartEntity.chartHeight - mChartEntity.fontHeightX;
-            float unitX = mChartEntity.unitXDistance;
-            float startX = -mChartEntity.xDistance % unitX;
+            float eventX = event.getX() - mChartConfig.startX;
+            float eventY = event.getY() - mChartConfig.startY - mChartConfig.chartHeight - mChartConfig.fontHeightX;
+            float unitX = mChartConfig.unitXDistance;
+            float startX = -mChartConfig.xDistance % unitX;
             if (showingItems != null) {
                 for (int i = 0; showingItems.size() > i; i++) {
                     index = showingItems.get(i).getIndex();
                     ChartItem current = showingItems.get(i);
-                    float valueY = -(mChartEntity.chartHeight * (current.getValue() - mValueEntity.min) / (mValueEntity.max - mValueEntity.min)) - mChartEntity.fontHeightX;
+                    float valueY = -(mChartConfig.chartHeight * (current.getValue() - mValueEntity.min) / (mValueEntity.max - mValueEntity.min)) - mChartConfig.fontHeightX;
                     float valueX = startX + i * unitX;
                     if (eventX >= valueX - range && eventX <= valueX + range &&
                             eventY >= valueY - range && eventY <= valueY + range) {//每个节点周围8dp都是可点击区域
@@ -701,19 +739,43 @@ public class ChartView extends View {
         float normalLow;
     }
 
-    class ChartEntity {
-        /*x轴刻度数量*/
-        public static final int X_COUNT = 7;
-        /*y轴刻度数量*/
-        public static final int Y_COUNT = 6;
+    public enum UnitType
+    {
+        TYPE_NUM, TYPE_DATE
+    }
+
+    static class ChartConfig
+    {
+
+        /*默认x轴刻度数量*/
+        public static final int DEFAULT_X_COUNT = 7;
+        /*默认y轴刻度数量*/
+        public static final int DEFAULT_Y_COUNT = 6;
 
         /*默认字体大小*/
         private static final int DEFAULT_FONT_SIZE = 30;
         /*边距*/
         public static final int DEFAULT_PADDING = 50;
 
+        public static final int FONT_PADDING = 10;
+
         /*是否已经初始化（只初始化一次）*/
         boolean isInit = false;
+
+        /*X轴上的单位*/
+        String unitXText;
+        /*X轴上的单位宽度*/
+        float unitXWidth;
+        /*Y轴上的单位*/
+        String unitYText;
+        /*Y轴上的单位高度*/
+        float unitYHeight = 0;
+        /*x轴刻度数量*/
+        int countX = DEFAULT_X_COUNT;
+        /*y轴刻度数量*/
+        int countY = DEFAULT_Y_COUNT;
+        /*X轴上的单位类型*/
+        private UnitType xUnitType = UnitType.TYPE_DATE;
 
         /*总宽度*/
         float totalWidth;
@@ -739,28 +801,44 @@ public class ChartView extends View {
         float unitYDistance;
         /*X轴滑动的距离*/
         private float xDistance = 0;
-        /*X轴上的单位*/
-        String unitX;
-        /*Y轴上的单位*/
-        String unitY;
 
-        void init(DefaultValueEntity valueEntity)
+
+        void init(DefaultValueEntity valueEntity, ChartView chartView)
         {
-            totalHeight = getHeight();
-            totalWidth = getWidth();
+            totalHeight = chartView.getHeight();
+            totalWidth = chartView.getWidth();
 
             Paint paint = new Paint();
             paint.setTextSize(DEFAULT_FONT_SIZE);
+            float fontHeight = CommonUtil.calculateFontHeight(paint);
             fontWidthY = CommonUtil.calculateFontWidth(paint, valueEntity.max + "");
-            fontWidthX =  CommonUtil.calculateFontWidth(paint, "00:00:00");
-            fontHeightX = 2 * CommonUtil.calculateFontHeight(paint);
+            if (xUnitType == UnitType.TYPE_DATE)
+            {
+                fontWidthX = CommonUtil.calculateFontWidth(paint, "00:00:00");
+                fontHeightX = 2 * fontHeight;
+            }
+            else
+            {
+                fontWidthX = CommonUtil.calculateFontWidth(paint, "99");
+                fontHeightX = fontHeight;
+            }
+            if (!TextUtils.isEmpty(unitYText))
+            {
+                unitYHeight = fontHeight;
+            }
+
+            if (!TextUtils.isEmpty(unitXText))
+            {
+                unitXWidth = CommonUtil.calculateFontWidth(paint, unitXText + FONT_PADDING);
+            }
+
             startX = fontWidthY + DEFAULT_PADDING;
-            startY = DEFAULT_PADDING;
-            chartWidth = totalWidth - fontWidthY - 2 * DEFAULT_PADDING;
-            chartHeight = totalHeight - fontHeightX - 2 * DEFAULT_PADDING;
+            startY = DEFAULT_PADDING + unitYHeight;
+            chartWidth = totalWidth - fontWidthY - 2 * DEFAULT_PADDING - unitXWidth;
+            chartHeight = totalHeight - fontHeightX - 2 * DEFAULT_PADDING - unitYHeight;
 
             //如果只有一条数据，则分成两段，值放中间
-            if (xShowCount <= 1)
+            if (chartView.xShowCount <= 1)
             {
                 unitXDistance = (int) chartWidth / 2;
                 chartWidth = unitXDistance * 2;
@@ -769,24 +847,74 @@ public class ChartView extends View {
             else
             {
                 //X的每个刻度取整
-                unitXDistance = (int) chartWidth / (xShowCount - 1);
+                unitXDistance = (int) chartWidth / (chartView.xShowCount - 1);
                 //X刻度取整后，图表宽度需根据刻度重新计算，取整
-                chartWidth = unitXDistance * (xShowCount - 1);
+                chartWidth = unitXDistance * (chartView.xShowCount - 1);
             }
 
-            unitYDistance = chartHeight / (Y_COUNT - 1);
-            if (!isInit && mChartItemListList != null && !mChartItemListList.isEmpty())
+            unitYDistance = chartHeight / (countY - 1);
+            if (!isInit && chartView.mChartItemListList != null && !chartView.mChartItemListList.isEmpty())
             {
                 isInit = true;
-                if (xShowCount >= X_COUNT)
+                if (chartView.xShowCount >= countX)
                 {
-                    mChartEntity.xDistance = (float) (mChartEntity.chartWidth * (mChartItemListList.get(0).size() - xShowCount) / (xShowCount - 1.0));
+                    xDistance = (float) (chartWidth * (chartView.mChartItemListList.get(0).size() - chartView.xShowCount) / (chartView.xShowCount - 1.0));
                 }
                 else
                 {
-                    mChartEntity.xDistance = 0;
+                    xDistance = 0;
                 }
             }
+        }
+    }
+
+    public static class ChartConfigBuilder
+    {
+        private ChartConfig mChartConfig;
+
+        public ChartConfigBuilder()
+        {
+            mChartConfig = new ChartConfig();
+        }
+
+        /*设置X轴上的单位*/
+        public ChartConfigBuilder setUnitX(String unitX)
+        {
+            mChartConfig.unitXText = unitX;
+            return this;
+        }
+
+        /*设置Y轴上的单位*/
+        public ChartConfigBuilder setUnitY(String unitY)
+        {
+            mChartConfig.unitYText = unitY;
+            return this;
+        }
+
+        /*设置X轴的刻度数量*/
+        public ChartConfigBuilder setCountX(int countX)
+        {
+            mChartConfig.countX = countX;
+            return this;
+        }
+
+        /*设置Y轴的刻度数量*/
+        public ChartConfigBuilder setCountY(int countY)
+        {
+            mChartConfig.countY = countY;
+            return this;
+        }
+
+        /*设置X轴上的单位类型*/
+        public ChartConfigBuilder setUnitXType(UnitType unitType)
+        {
+            mChartConfig.xUnitType = unitType;
+            return this;
+        }
+
+        public ChartConfig build()
+        {
+            return mChartConfig;
         }
     }
 

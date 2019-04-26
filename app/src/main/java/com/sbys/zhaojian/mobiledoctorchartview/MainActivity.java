@@ -19,6 +19,14 @@ public class MainActivity extends Activity
         setContentView(R.layout.activity_main);
         ChartView chartView = findViewById(R.id.chatView);
         chartView.setEmpty(ChartView.CHART_TYPE_HEART);
+        chartView.setConfig(new ChartView.ChartConfigBuilder()
+                .setCountX(4)
+                .setCountY(4)
+                .setUnitY("(cm)")
+                .setUnitX("(周)")
+                .setUnitXType(ChartView.UnitType.TYPE_NUM)
+                .build());
+
         drawDouble(chartView);
         //drawDoubleSpecial(chartView);
         //drawSingle(chartView);
@@ -40,8 +48,8 @@ public class MainActivity extends Activity
         chartItems.add(new ChartItem(50, "11/16 14:22"));
         chartItems.add(new ChartItem(110, "11/17 14:22"));
         chartItems.add(new ChartItem(40, "11/18 14:22"));
-        chartItems.add(new ChartItem(120, "11/19 14:22:55"));
-        chartItems.add(new ChartItem(70, "11/20 14:22"));
+        chartItems.add(new ChartItem(120, "22"));
+        chartItems.add(new ChartItem(70, "33"));
         chartView.setData(chartItems, ChartView.CHART_TYPE_HEART);
     }
 
@@ -59,10 +67,12 @@ public class MainActivity extends Activity
         chartItems.add(new ChartItem(2, "11/14",ChartItem.TYPE_SINGLE_TWO));
         chartItems.add(new ChartItem(8, "11/15",ChartItem.TYPE_SINGLE_TWO));
         chartItems.add(new ChartItem(7, "11/16",ChartItem.TYPE_SINGLE_ONE));
+        chartItems.add(new ChartItem(11, "11/20 14:22",ChartItem.TYPE_SINGLE_THREE));
         chartItems.add(new ChartItem(3, "11/17",ChartItem.TYPE_SINGLE_TWO));
         chartItems.add(new ChartItem(6, "11/18",ChartItem.TYPE_SINGLE_ONE));
         chartItems.add(new ChartItem(11, "11/19",ChartItem.TYPE_SINGLE_ONE));
         chartItems.add(new ChartItem(1, "11/20",ChartItem.TYPE_SINGLE_TWO));
+        chartItems.add(new ChartItem(9, "11/21 14:21",ChartItem.TYPE_SINGLE_THREE));
         chartView.setData(chartItems, ChartView.CHART_TYPE_SUGAR);
     }
 
