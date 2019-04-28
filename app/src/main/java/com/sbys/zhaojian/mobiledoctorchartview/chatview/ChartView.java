@@ -5,9 +5,12 @@ import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.DashPathEffect;
+import android.graphics.LinearGradient;
 import android.graphics.Paint;
 import android.graphics.Path;
 import android.graphics.PathMeasure;
+import android.graphics.Shader;
+import android.graphics.drawable.Drawable;
 import android.text.TextUtils;
 import android.util.AttributeSet;
 import android.util.Log;
@@ -55,19 +58,19 @@ public class ChartView extends View {
     /*当前绘制中的多条数据*/
     private List<List<ChartItem>> currentDrawingItemsList = new ArrayList<>();
     private ChartConfig mChartConfig = new ChartConfig();
-    private GestureDetector mGestureDetector;
+    //private GestureDetector mGestureDetector;
     private int type;
     private int xShowCount = 0;
     List<ChartItem> showingItems;
+    private Drawable detailTextDrawable = new ChartDetailDrawable();
 
     public ChartView(Context context, AttributeSet attrs) {
         super(context, attrs);
-        initView();
     }
 
-    private void initView() {
+   /* private void initView() {
         mGestureDetector = new GestureDetector(mGestureListener);
-    }
+    }*/
 
     public void setEmpty(int type) {
         setMultiData(new ArrayList<List<ChartItem>>(), type);
@@ -249,10 +252,6 @@ public class ChartView extends View {
 
             paint.setStyle(Paint.Style.STROKE);
             paint.setStrokeWidth(5);
-            List<List<ChartItem>> itemsList = createLists(currentDrawingItems);
-            if (itemsList == null || itemsList.isEmpty()) {
-                return;
-            }
             drawPointReal(currentDrawingItems, canvas, unitX, startX, mValueEntity.max - mValueEntity.min);
         }
     }
@@ -277,8 +276,116 @@ public class ChartView extends View {
 
     @Override
     public boolean onTouchEvent(MotionEvent event) {
-        return mGestureDetector.onTouchEvent(event);
+        //return mGestureDetector.onTouchEvent(event);
+        switch (event.getAction())
+        {
+            case MotionEvent.ACTION_DOWN:
+                MotionEventHelper.preX = MotionEventHelper.downX = event.getX();
+                MotionEventHelper.downY = event.getY();
+                if (mChartConfig.mMoveType == MoveType.TYPE_VERTIAL_LINE)
+                {
+                    mChartConfig.verticalIndex = getVerticalIndex(event.getX());
+                    mChartConfig.drawingVerticalIndex = getDrawingVerticalIndex(event.getX());
+                    invalidate();
+                }
+                break;
+            case MotionEvent.ACTION_MOVE:
+                MotionEventHelper.scrolling = true;
+                float pre =  MotionEventHelper.preX;
+                MotionEventHelper.preX = event.getX();
+                if (mChartConfig.mMoveType == MoveType.TYPE_LINE)
+                {
+                    scrollLine(pre - event.getX());
+                }
+                else if (mChartConfig.mMoveType == MoveType.TYPE_VERTIAL_LINE)
+                {
+                    if (mChartConfig.verticalIndex != getVerticalIndex(event.getX()))
+                    {
+                        mChartConfig.verticalIndex = getVerticalIndex(event.getX());
+                        mChartConfig.drawingVerticalIndex = getDrawingVerticalIndex(event.getX());
+                        invalidate();
+                    }
+                }
+                break;
+            case MotionEvent.ACTION_UP:
+            case MotionEvent.ACTION_CANCEL:
+                MotionEventHelper.scrolling = false;
+                if (MotionEventHelper.isclick(event.getX(), event.getY()))
+                {
+                    int index = getVerticalIndex(event.getX());
+                    int drawingIndx = getDrawingVerticalIndex(event.getX());
+                    Log.d(TAG, "onTouchEvent: click point--------------->" + index + "|drawing:" + drawingIndx);
+                    if (onClickPointListener != null)
+                    {
+                        onClickPointListener.onClick(mChartItemListList.get(0).get(index));
+                    }
+                    mChartConfig.verticalIndex = index;
+                    mChartConfig.drawingVerticalIndex = getDrawingVerticalIndex(event.getX());
+                    invalidate();
+                }
+                break;
+            default:
+                break;
+        }
+        return true;
     }
+
+    private int getVerticalIndex(float x)
+    {
+        return (int) ((mChartConfig.xDistance + x - mChartConfig.startX) / mChartConfig.unitXDistance + 0.5);
+    }
+
+    private int getDrawingVerticalIndex(float x)
+    {
+        float rest = mChartConfig.xDistance % mChartConfig.unitXDistance;
+        return (int) ((rest + x - mChartConfig.startX) / mChartConfig.unitXDistance + 0.5);
+    }
+
+    private void scrollVerticalLine()
+    {
+
+    }
+
+    private void scrollLine(float distanceX)
+    {
+        //如果向右滑动，并且已经滑动到最后一个，则不让滑动
+        if (distanceX > 0 && isEnd()) {
+            Logger.d("onScroll-----------------> is end");
+            return;
+        }
+        //如果向左滑动，并且已经滑动到第一个，则不让滑动
+        if (distanceX < 0 && isStart()) {
+            Logger.d("onScroll------------------> is start");
+            return;
+        }
+        mChartConfig.xDistance = mChartConfig.xDistance + distanceX;
+        if (mChartConfig.xDistance < 0) {
+            mChartConfig.xDistance = 0;
+        }
+        updateData();
+        postInvalidate();
+    }
+
+    private boolean isEnd() {
+        if (mChartItemListList == null || mChartItemListList.isEmpty()) {
+            return true;
+        }
+        List<ChartItem> chartItems = mChartItemListList.get(0);
+        List<ChartItem> currentDrawingItems = currentDrawingItemsList.get(0);
+
+        return chartItems.size() <= mChartConfig.countX
+                || currentDrawingItems.get(currentDrawingItems.size() - 1).equals(chartItems.get(chartItems.size() - 1)) && mChartConfig.xDistance >= mChartConfig.chartWidth * (chartItems.size() - mChartConfig.countX) / (mChartConfig.countX - 1.0);
+    }
+
+    private boolean isStart() {
+        if (mChartItemListList == null || mChartItemListList.isEmpty()) {
+            return true;
+        }
+        List<ChartItem> chartItems = mChartItemListList.get(0);
+        List<ChartItem> currentDrawingItems = currentDrawingItemsList.get(0);
+        return currentDrawingItems.get(0).equals(chartItems.get(0)) && mChartConfig.xDistance <= 0;
+    }
+
 
     /**
      * 画单位
@@ -372,16 +479,19 @@ public class ChartView extends View {
     {
         paint.setStyle(Paint.Style.FILL);
         showingItems = currentDrawingItems;
+        float scale = 1f;
+
 
         //如果只有一条，画在中间
-        if (xShowCount == 1)
+        if (xShowCount == 1 && mChartConfig.supportVerticalLine)
         {
+            scale = 1.5f;
             ChartItem current = currentDrawingItems.get(0);
             float valueY = mChartConfig.chartHeight * (current.getValue() - mValueEntity.min) / deltaValue;
             setPaintColorByType(current.getType());
-            canvas.drawCircle(startX + unitX, -valueY, 12, paint);
+            canvas.drawCircle(startX + unitX, -valueY, 12 * scale, paint);
             paint.setColor(Color.WHITE);
-            canvas.drawCircle(startX + unitX, -valueY, 6, paint);
+            canvas.drawCircle(startX + unitX, -valueY, 6 * scale, paint);
             return;
         }
 
@@ -390,12 +500,73 @@ public class ChartView extends View {
         {
             ChartItem current = currentDrawingItems.get(i);
             float valueY = mChartConfig.chartHeight * (current.getValue() - mValueEntity.min) / deltaValue;
+            scale = 1f;
+
+            if (scalePoint(currentDrawingItems.get(i).getIndex()))
+            {
+                scale = 1.5f;
+            }
+
+            if (drawVerticalLine(currentDrawingItems.get(i).getIndex()))
+            {
+                scale = 1.5f;
+                drawVerticalLine(canvas, startX + i * unitX);
+                drawDetailText(canvas, startX + i * unitX, -valueY);
+            }
+
             setPaintColorByType(current.getType());
-            canvas.drawCircle(startX + i * unitX, -valueY, 12, paint);
+            canvas.drawCircle(startX + i * unitX, -valueY, 12 * scale, paint);
             paint.setColor(Color.WHITE);
-            canvas.drawCircle(startX + i * unitX, -valueY, 6, paint);
+            canvas.drawCircle(startX + i * unitX, -valueY, 6 * scale, paint);
         }
         paint.setColor(Color.BLACK);
+    }
+
+    /*坐标的圆点是否要放大*/
+    private boolean scalePoint(int index)
+    {
+        if (mChartConfig.drawingVerticalIndex != index)
+        {
+            return false;
+        }
+        if (mChartConfig.mMoveType == MoveType.TYPE_VERTIAL_LINE)
+        {
+            return true;
+        }
+        else
+        {
+            return !MotionEventHelper.scrolling;
+        }
+    }
+
+    /*是否要画竖直线*/
+    private boolean drawVerticalLine(int index)
+    {
+        return mChartConfig.drawingVerticalIndex == index && mChartConfig.supportVerticalLine && scalePoint(index);
+    }
+
+    private void drawVerticalLine(Canvas canvas, float x)
+    {
+        LinearGradient linearGradient = new LinearGradient(x, 0, x, -mChartConfig.chartHeight, new int[]{
+                0xfff7fcf9, 0xff3acdf3}, null,
+                Shader.TileMode.REPEAT);
+        canvas.save();
+        paint.setColor(Color.RED);
+        paint.setStyle(Paint.Style.STROKE);
+        paint.setShader(linearGradient);
+        Path path = new Path();
+        path.moveTo(x, -mChartConfig.chartHeight);
+        path.lineTo(x, 0);
+        canvas.drawPath(path, paint);
+        canvas.restore();
+        paint.setStyle(Paint.Style.FILL);
+        paint.setShader(null);
+    }
+
+    private void drawDetailText(Canvas canvas, float x, float y)
+    {
+        detailTextDrawable.setBounds((int) x, (int) y, (int) (x + 200), (int) (y + 50));
+        detailTextDrawable.draw(canvas);
     }
 
     private void drawDate(Canvas canvas, int unitX, float startX) {
@@ -615,123 +786,6 @@ public class ChartView extends View {
         }
     }
 
-    private GestureDetector.OnGestureListener mGestureListener = new GestureDetector.OnGestureListener() {
-        int index;
-
-        @Override
-        public boolean onDown(MotionEvent e) {
-            return true;
-        }
-
-        @Override
-        public void onShowPress(MotionEvent e) {
-
-        }
-
-        /**
-         * Touch了滑动时触发
-         */
-        @Override
-        public boolean onScroll(MotionEvent e1, MotionEvent e2, float distanceX, float distanceY) {
-            Log.d("---","onScroll-----------------> distanceX:" + distanceX + "|distanceY" + distanceY);
-            if (mChartConfig.mMoveType == MoveType.TYPE_LINE)
-            {
-                scrollLine(distanceX);
-            }
-            else
-            {
-                scrollVerticalLine();
-            }
-            return true;
-        }
-
-        private void scrollVerticalLine()
-        {
-            if (!mChartConfig.showVerticalLine)
-            {
-                return;
-            }
-
-
-        }
-
-        private void scrollLine(float distanceX)
-        {
-            //如果向右滑动，并且已经滑动到最后一个，则不让滑动
-            if (distanceX > 0 && isEnd()) {
-                Logger.d("onScroll-----------------> is end");
-                return;
-            }
-            //如果向左滑动，并且已经滑动到第一个，则不让滑动
-            if (distanceX < 0 && isStart()) {
-                Logger.d("onScroll------------------> is start");
-                return;
-            }
-            mChartConfig.xDistance = mChartConfig.xDistance + distanceX;
-            if (mChartConfig.xDistance < 0) {
-                mChartConfig.xDistance = 0;
-            }
-            updateData();
-            postInvalidate();
-        }
-
-        private boolean isEnd() {
-            if (mChartItemListList == null || mChartItemListList.isEmpty()) {
-                return true;
-            }
-            List<ChartItem> chartItems = mChartItemListList.get(0);
-            List<ChartItem> currentDrawingItems = currentDrawingItemsList.get(0);
-
-            return chartItems.size() <= mChartConfig.countX
-                    || currentDrawingItems.get(currentDrawingItems.size() - 1).equals(chartItems.get(chartItems.size() - 1)) && mChartConfig.xDistance >= mChartConfig.chartWidth * (chartItems.size() - mChartConfig.countX) / (mChartConfig.countX - 1.0);
-        }
-
-        private boolean isStart() {
-            if (mChartItemListList == null || mChartItemListList.isEmpty()) {
-                return true;
-            }
-            List<ChartItem> chartItems = mChartItemListList.get(0);
-            List<ChartItem> currentDrawingItems = currentDrawingItemsList.get(0);
-            return currentDrawingItems.get(0).equals(chartItems.get(0)) && mChartConfig.xDistance <= 0;
-        }
-
-        @Override
-        public boolean onSingleTapUp(MotionEvent event) {
-            Log.d(TAG, "onSingleTapUp:------------------>");
-            if (onClickPointListener == null)
-            {
-                return true;
-            }
-            int range = 50;
-            float eventX = event.getX() - mChartConfig.startX;
-            float eventY = event.getY() - mChartConfig.startY - mChartConfig.chartHeight - mChartConfig.fontHeightX;
-            float unitX = mChartConfig.unitXDistance;
-            float startX = -mChartConfig.xDistance % unitX;
-            if (showingItems != null) {
-                for (int i = 0; showingItems.size() > i; i++) {
-                    index = showingItems.get(i).getIndex();
-                    ChartItem current = showingItems.get(i);
-                    float valueY = -(mChartConfig.chartHeight * (current.getValue() - mValueEntity.min) / (mValueEntity.max - mValueEntity.min)) - mChartConfig.fontHeightX;
-                    float valueX = startX + i * unitX;
-                    if (eventX >= valueX - range && eventX <= valueX + range &&
-                            eventY >= valueY - range && eventY <= valueY + range) {//每个节点周围8dp都是可点击区域
-                        onClickPointListener.onClick(showingItems.get(i).getIndex());
-                        return true;
-                    }
-                }
-            }
-            return true;
-        }
-
-        @Override
-        public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {
-            return false;
-        }
-
-        @Override
-        public void onLongPress(MotionEvent e) {
-        }
-    };
 
     public void setPaintColorByType(int type) {
         switch (type) {
@@ -806,8 +860,8 @@ public class ChartView extends View {
         int countY = DEFAULT_Y_COUNT;
         /*X轴上的单位类型*/
         private UnitType xUnitType = UnitType.TYPE_DATE;
-        /*竖线提示*/
-        private boolean showVerticalLine = false;
+        /*支持竖线提示*/
+        private boolean supportVerticalLine = false;
         /*滑动模式*/
         private MoveType mMoveType = MoveType.TYPE_LINE;
 
@@ -833,9 +887,18 @@ public class ChartView extends View {
         float unitXDistance;
         /*y轴距*/
         float unitYDistance;
+
+        /*-----------------滑动时实时变动的数据--------------------*/
         /*X轴滑动的距离*/
         private float xDistance = 0;
-
+        /*竖线在所有数据中的位置*/
+        private int verticalIndex;
+        /*竖线在正在的数据中的位置*/
+        private int drawingVerticalIndex;
+        /*是否需要显示竖线*/
+        //private float preX;
+        //private float downX;
+        //private boolean scrolling = false;
 
         void init(DefaultValueEntity valueEntity, ChartView chartView)
         {
@@ -948,7 +1011,7 @@ public class ChartView extends View {
 
         public ChartConfigBuilder showVertialLine(boolean show)
         {
-            mChartConfig.showVerticalLine = show;
+            mChartConfig.supportVerticalLine = show;
             return this;
         }
 
@@ -966,7 +1029,7 @@ public class ChartView extends View {
     }
 
     public interface OnClickPointListener {
-        void onClick(int index);
+        void onClick(ChartItem chartItem);
     }
 
     public OnClickPointListener onClickPointListener;

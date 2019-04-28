@@ -2,6 +2,7 @@ package com.sbys.zhaojian.mobiledoctorchartview;
 
 import android.app.Activity;
 import android.os.Bundle;
+import android.util.Log;
 
 import com.sbys.zhaojian.mobiledoctorchartview.chatview.ChartItem;
 import com.sbys.zhaojian.mobiledoctorchartview.chatview.ChartView;
@@ -11,6 +12,7 @@ import java.util.List;
 
 public class MainActivity extends Activity
 {
+    private static final String TAG = "MainActivity";
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -20,12 +22,22 @@ public class MainActivity extends Activity
         ChartView chartView = findViewById(R.id.chatView);
         chartView.setEmpty(ChartView.CHART_TYPE_HEART);
         chartView.setConfig(new ChartView.ChartConfigBuilder()
-                .setCountX(4)
+                .setCountX(8)
                 .setCountY(4)
                 .setUnitY("(cm)")
                 .setUnitX("(周)")
                 .setUnitXType(ChartView.UnitType.TYPE_NUM)
+                .setMoveType(ChartView.MoveType.TYPE_LINE)
+                .showVertialLine(true)
                 .build());
+        chartView.setOnClickPointListener(new ChartView.OnClickPointListener()
+        {
+            @Override
+            public void onClick(ChartItem chartItem)
+            {
+                Log.d(TAG, "onClick:----------------> " + chartItem.getValue());
+            }
+        });
 
         drawDouble(chartView);
         //drawDoubleSpecial(chartView);
