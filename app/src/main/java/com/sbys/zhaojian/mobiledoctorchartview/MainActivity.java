@@ -27,7 +27,7 @@ public class MainActivity extends Activity
                 .setUnitY("(cm)")
                 .setUnitX("(周)")
                 .setUnitXType(ChartView.UnitType.TYPE_NUM)
-                .setMoveType(ChartView.MoveType.TYPE_LINE)
+                .setMoveType(ChartView.MoveType.TYPE_VERTIAL_LINE)
                 .showVertialLine(true)
                 .build());
         chartView.setOnClickPointListener(new ChartView.OnClickPointListener()
@@ -39,9 +39,9 @@ public class MainActivity extends Activity
             }
         });
 
-        drawDouble(chartView);
+        //drawDouble(chartView);
         //drawDoubleSpecial(chartView);
-        //drawSingle(chartView);
+        drawSingle(chartView);
     }
 
     /**
