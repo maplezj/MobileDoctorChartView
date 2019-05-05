@@ -63,11 +63,10 @@ public class ChartView extends View
     private ChartConfig mChartConfig = new ChartConfig();
     private int xShowCount = 0;
     List<ChartItem> showingItems;
-    private ChartDetailDrawable detailTextDrawable = new ChartDetailDrawable();
 
     private Map<Integer, List<ChartItem>> mChartItemListMap = new HashMap<>();
     private Map<Integer, List<ChartItem>> drawingListMap = new HashMap<>();
-    Map<Integer, List<Point>> pointListMap;
+    private Map<Integer, List<Point>> pointListMap;
 
     public ChartView(Context context, AttributeSet attrs)
     {
@@ -116,9 +115,14 @@ public class ChartView extends View
             }
             else
             {
+                if (integer == ChartItem.LINE_SOURCE)
+                {
+                    mChartConfig.sourceEndIndex = chartItemListMap.get(integer).size() - 1;
+                }
                 for (int i = 0; i < chartItemListMap.get(integer).size(); i++)
                 {
                     ChartItem item = chartItemListMap.get(integer).get(i);
+                    item.setType(integer);
                     item.setIndex(i);
                 }
 
@@ -299,7 +303,49 @@ public class ChartView extends View
     {
         canvas.saveLayer(-14, -ChartConfig.DEFAULT_PADDING - mChartConfig.chartHeight - mChartConfig.fontHeightX,
                 mChartConfig.chartWidth + 14, mChartConfig.fontHeightX + ChartConfig.DEFAULT_PADDING, null, Canvas.ALL_SAVE_FLAG);
+        Map<Integer, List<Point>> tem = new HashMap<>();
         for (Integer integer : pointListMap.keySet())
+        {
+            List<Point> pointList = pointListMap.get(integer);
+            if (pointList == null || pointList.isEmpty())
+            {
+                return;
+            }
+
+            for (Point point : pointList)
+            {
+                if (tem.containsKey(point.index))
+                {
+                    tem.get(point.index).add(point);
+                }
+                else
+                {
+                    List<Point> chartItemList = new ArrayList<>();
+                    chartItemList.add(point);
+                    tem.put(point.index, chartItemList);
+                }
+            }
+        }
+
+        for (Integer integer : tem.keySet())
+        {
+            List<Point> pointList = tem.get(integer);
+            if (pointList == null || pointList.isEmpty())
+            {
+                return;
+            }
+
+            if (drawVerticalLine(integer))
+            {
+                paint.setStyle(Paint.Style.STROKE);
+                paint.setStrokeWidth(5);
+                drawDetailText(canvas, pointList);
+            }
+
+        }
+
+
+       /* for (Integer integer : pointListMap.keySet())
         {
             List<Point> pointList = pointListMap.get(integer);
             if (pointList == null || pointList.isEmpty())
@@ -327,7 +373,7 @@ public class ChartView extends View
                     drawDetailText(canvas, current.x, current.y);
                 }
             }
-        }
+        }*/
     }
 
     /*画点及竖线指示*/
@@ -590,6 +636,7 @@ public class ChartView extends View
             {
                 ChartItem currentDrawingItem = chartItems.get(i);
                 Point point = new Point();
+                point.source = currentDrawingItem;
                 point.index = currentDrawingItem.getIndex();
                 point.type = currentDrawingItem.getType();
 
@@ -704,8 +751,10 @@ public class ChartView extends View
     /*坐标的圆点是否要放大*/
     private boolean scalePoint(int index)
     {
-        if (mChartConfig.verticalIndex != index)
+        if (mChartConfig.verticalIndex != index
+                || !(mChartConfig.sourceEndIndex < 0 || index <= mChartConfig.sourceEndIndex))
         {
+
             return false;
         }
         if (mChartConfig.mMoveType == MoveType.TYPE_VERTIAL_LINE)
@@ -721,7 +770,8 @@ public class ChartView extends View
     /*是否要画竖直线*/
     private boolean drawVerticalLine(int index)
     {
-        return mChartConfig.verticalIndex == index && mChartConfig.supportVerticalLine && scalePoint(index);
+        return mChartConfig.verticalIndex == index && mChartConfig.supportVerticalLine && scalePoint(index)
+                && (mChartConfig.sourceEndIndex < 0 || index <= mChartConfig.sourceEndIndex);
     }
 
     private void drawVerticalLine(Canvas canvas, float x)
@@ -741,10 +791,13 @@ public class ChartView extends View
         paint.setShader(null);
     }
 
-    private void drawDetailText(Canvas canvas, float x, float y)
+    private void drawDetailText(Canvas canvas, List<Point> points)
     {
-        detailTextDrawable.setLocation((int) x, (int) y, (int) mChartConfig.chartWidth, (int) mChartConfig.chartHeight);
-        detailTextDrawable.draw(canvas);
+        if (mChartConfig.detailTextDrawable != null)
+        {
+            mChartConfig.detailTextDrawable.setData(points, (int) mChartConfig.chartWidth, (int) mChartConfig.chartHeight);
+            mChartConfig.detailTextDrawable.draw(canvas);
+        }
     }
 
     private void drawDate(Canvas canvas, int unitX, float startX)
@@ -783,7 +836,7 @@ public class ChartView extends View
         }
 
         //否则从最左侧开始画
-        for (int i = mChartConfig.startIndex; i < mChartConfig.endIndex; i++)
+        for (int i = mChartConfig.startIndex; i <= mChartConfig.endIndex; i++)
         {
             ChartItem current = getChartItemByIndex(i);
             if (current == null)
@@ -958,24 +1011,32 @@ public class ChartView extends View
 
     public void setPaintColorByType(int type)
     {
-        switch (type)
+        if (mChartConfig.colorMap.containsKey(type))
         {
-            case ChartItem.TYPE_NORMAL:
+            paint.setColor(mChartConfig.colorMap.get(type));
+        }
+        else
+        {
+            paint.setColor(mChartConfig.defaultLineColor);
+        }
+      /*  switch (type)
+        {
+            case ChartItem.LINE_1:
                 paint.setColor(Color.rgb(86, 189, 114));//绿
                 break;
-            case ChartItem.TYPE_SINGLE_ONE:
+            case ChartItem.LINE_2:
                 paint.setColor(Color.rgb(86, 189, 114));//绿
                 break;
-            case ChartItem.TYPE_SINGLE_TWO:
+            case ChartItem.LINE_3:
                 paint.setColor(Color.rgb(78, 193, 242));//蓝
                 break;
-            case ChartItem.TYPE_SINGLE_THREE:
+            case ChartItem.LINE_4:
                 paint.setColor(Color.RED);
                 break;
             default:
-                paint.setColor(Color.WHITE);
+                paint.setColor(Color.RED);
                 break;
-        }
+        }*/
     }
 
     private static class DefaultValueEntity
@@ -1037,6 +1098,17 @@ public class ChartView extends View
         private MoveType mMoveType = MoveType.TYPE_LINE;
         /*曲线图类型（高血压、糖尿病、、、）*/
         private int type;
+
+        private int defaultLineColor = Color.rgb(78, 193, 242);
+
+        private Map<Integer, Integer> colorMap = new HashMap<>();
+
+        /*用于控制竖线可滑动的范围*/
+        private int sourceEndIndex = -1;
+
+        private ChartDetailDrawable detailTextDrawable;
+
+
 
         /*总宽度*/
         float totalWidth;
@@ -1216,6 +1288,24 @@ public class ChartView extends View
             return this;
         }
 
+        public ChartConfigBuilder setColor(int type, int color)
+        {
+            mChartConfig.colorMap.put(type, color);
+            return this;
+        }
+
+        public ChartConfigBuilder setColorAll(int color)
+        {
+            mChartConfig.defaultLineColor = color;
+            return this;
+        }
+
+        public ChartConfigBuilder setDetailDrawable(ChartDetailDrawable drawable)
+        {
+            mChartConfig.detailTextDrawable = drawable;
+            return this;
+        }
+
         public ChartConfig build()
         {
             return mChartConfig;
@@ -1234,12 +1324,33 @@ public class ChartView extends View
         this.onClickPointListener = onClickPointListener;
     }
 
-    private class Point
+    public static class Point
     {
         private float x;
         private float y;
         private int index;
         private int type;
+        private ChartItem source;
+
+        public float getX()
+        {
+            return x;
+        }
+
+        public float getY()
+        {
+            return y;
+        }
+
+        public int getType()
+        {
+            return type;
+        }
+
+        public ChartItem getSource()
+        {
+            return source;
+        }
     }
 
 }

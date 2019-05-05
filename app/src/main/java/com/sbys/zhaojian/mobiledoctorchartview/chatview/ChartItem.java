@@ -8,13 +8,16 @@ import android.support.annotation.NonNull;
 
 public class ChartItem implements Comparable<ChartItem>
 {
-    public static final int TYPE_NORMAL = 0;
+    /*源数据，在有多条先的情况下以那条线为准*/
+    public static final int LINE_SOURCE = 0;
+
+    public static final int LINE_1 = 1;
     /*X轴不重复的曲线1*/
-    public static final int TYPE_SINGLE_ONE = 1;
+    public static final int LINE_2 = 2;
     /*X轴不重复的曲线2*/
-    public static final int TYPE_SINGLE_TWO = 2;
+    public static final int LINE_3 = 3;
     /*X轴不重复的曲线3*/
-    public static final int TYPE_SINGLE_THREE = 3;
+    public static final int LINE_4 = 4;
     private float value;
     private String date;
     private int type;
@@ -22,7 +25,7 @@ public class ChartItem implements Comparable<ChartItem>
 
     public ChartItem(float value, String date)
     {
-        this(value, date, TYPE_NORMAL);
+        this(value, date, LINE_1);
     }
 
 
@@ -42,6 +45,11 @@ public class ChartItem implements Comparable<ChartItem>
     public String getDate()
     {
         return date;
+    }
+
+    public void setType(int type)
+    {
+        this.type = type;
     }
 
     public int getType()

@@ -13,19 +13,22 @@ import android.text.Layout;
 import android.text.StaticLayout;
 import android.text.TextPaint;
 
+import java.util.List;
+
 /**
  * @author zhaojian
  * @time 2019/4/28 11:18
  * @describe
  */
-public class ChartDetailDrawable extends Drawable
+public abstract class ChartDetailDrawable extends Drawable
 {
     private static final int PADDING_ARROUND = 20;
     private Paint mPaint = new Paint();
-    private int pointX;
-    private int pointY;
+    protected int pointX;
+    protected int pointY;
     private int chartWidth;
     private int chartHeight;
+    protected List<ChartView.Point> mChartItemList;
 
     @Override
     public void draw(@NonNull Canvas canvas)
@@ -33,12 +36,23 @@ public class ChartDetailDrawable extends Drawable
         drawText(canvas);
     }
 
-    public void setLocation(int pointX, int pointY, int chartWidth, int chartHeight)
+    public void setData(List<ChartView.Point> chartItemList, int chartWidth, int chartHeight)
     {
-        this.pointX = pointX;
-        this.pointY = pointY;
+        mChartItemList = chartItemList;
         this.chartWidth = chartWidth;
         this.chartHeight = chartHeight;
+        setPointXY();
+    }
+
+    protected void setPointXY()
+    {
+        if (mChartItemList == null || mChartItemList.isEmpty())
+        {
+            return;
+        }
+
+        pointX = (int) mChartItemList.get(0).getX();
+        pointY = (int) mChartItemList.get(0).getY();
     }
 
     private int calculateLeft(float x, int width)
@@ -59,6 +73,8 @@ public class ChartDetailDrawable extends Drawable
         return (int) y + PADDING_ARROUND;
     }
 
+    protected abstract String createContent();
+
 
     private void drawText(Canvas canvas)
     {
@@ -66,8 +82,8 @@ public class ChartDetailDrawable extends Drawable
         paint.setTextAlign(Paint.Align.LEFT);
         paint.setTextSize(34);
         paint.setColor(Color.WHITE);
-        String message = "随访日期：2019-02-12\n血         压：110/88mmHg\n用药信息：头孢、埃斯皮里、感冒药、发烧药";
-        StaticLayout myStaticLayout = new StaticLayout(message, paint, chartWidth/2, Layout.Alignment.ALIGN_NORMAL, 1.2f, 0.0f, false);
+        //String message = "随访日期：2019-02-12\n血         压：110/88mmHg\n用药信息：头孢、埃斯皮里、感冒药、发烧药";
+        StaticLayout myStaticLayout = new StaticLayout(createContent(), paint, chartWidth/2, Layout.Alignment.ALIGN_NORMAL, 1.2f, 0.0f, false);
 
         mPaint.setColor(Color.BLACK);
         mPaint.setAlpha(178);
