@@ -20,7 +20,7 @@ public class MainActivity extends Activity
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         ChartView chartView = findViewById(R.id.chatView);
-        chartView.setEmpty(ChartView.CHART_TYPE_HEART);
+        //chartView.setEmpty(ChartView.CHART_TYPE_HEART);
         chartView.setConfig(new ChartView.ChartConfigBuilder()
                 .setCountX(8)
                 .setCountY(4)
@@ -28,8 +28,11 @@ public class MainActivity extends Activity
                 .setUnitX("(周)")
                 .setUnitXType(ChartView.UnitType.TYPE_NUM)
                 .setMoveType(ChartView.MoveType.TYPE_VERTIAL_LINE)
+                .addMultTypeLine(drawDoubleSpecial())
+                .setType(ChartView.CHART_TYPE_SUGAR)
                 .showVertialLine(true)
                 .build());
+
         chartView.setOnClickPointListener(new ChartView.OnClickPointListener()
         {
             @Override
@@ -39,9 +42,9 @@ public class MainActivity extends Activity
             }
         });
 
-        //drawDouble(chartView);
+        //drawDouble();
         //drawDoubleSpecial(chartView);
-        drawSingle(chartView);
+        //drawSingle(chartView);
     }
 
     /**
@@ -62,37 +65,36 @@ public class MainActivity extends Activity
         chartItems.add(new ChartItem(40, "11/18 14:22"));
         chartItems.add(new ChartItem(120, "22"));
         chartItems.add(new ChartItem(70, "33"));
-        chartView.setData(chartItems, ChartView.CHART_TYPE_HEART);
+        //chartView.setData(chartItems, ChartView.CHART_TYPE_HEART);
     }
 
     /**
      * 画血糖的两条线
-     * @param chartView
      */
-    private void drawDoubleSpecial(ChartView chartView)
+    private List<ChartItem> drawDoubleSpecial()
     {
         ArrayList<ChartItem> chartItems = new ArrayList<>();
 
-        chartItems.add(new ChartItem(5, "11/11",ChartItem.TYPE_SINGLE_ONE));
-        chartItems.add(new ChartItem(8, "11/12",ChartItem.TYPE_SINGLE_TWO));
-        chartItems.add(new ChartItem(4, "11/13",ChartItem.TYPE_SINGLE_ONE));
-        chartItems.add(new ChartItem(2, "11/14",ChartItem.TYPE_SINGLE_TWO));
-        chartItems.add(new ChartItem(8, "11/15",ChartItem.TYPE_SINGLE_TWO));
-        chartItems.add(new ChartItem(7, "11/16",ChartItem.TYPE_SINGLE_ONE));
-        chartItems.add(new ChartItem(11, "11/20 14:22",ChartItem.TYPE_SINGLE_THREE));
-        chartItems.add(new ChartItem(3, "11/17",ChartItem.TYPE_SINGLE_TWO));
-        chartItems.add(new ChartItem(6, "11/18",ChartItem.TYPE_SINGLE_ONE));
-        chartItems.add(new ChartItem(11, "11/19",ChartItem.TYPE_SINGLE_ONE));
-        chartItems.add(new ChartItem(1, "11/20",ChartItem.TYPE_SINGLE_TWO));
-        chartItems.add(new ChartItem(9, "11/21 14:21",ChartItem.TYPE_SINGLE_THREE));
-        chartView.setData(chartItems, ChartView.CHART_TYPE_SUGAR);
+        chartItems.add(new ChartItem(5, "1",ChartItem.TYPE_SINGLE_ONE));
+        chartItems.add(new ChartItem(8, "2",ChartItem.TYPE_SINGLE_TWO));
+        chartItems.add(new ChartItem(4, "3",ChartItem.TYPE_SINGLE_ONE));
+        chartItems.add(new ChartItem(2, "4",ChartItem.TYPE_SINGLE_TWO));
+        chartItems.add(new ChartItem(8, "5",ChartItem.TYPE_SINGLE_TWO));
+        chartItems.add(new ChartItem(7, "6",ChartItem.TYPE_SINGLE_ONE));
+        chartItems.add(new ChartItem(11, "7",ChartItem.TYPE_SINGLE_THREE));
+        chartItems.add(new ChartItem(3, "8",ChartItem.TYPE_SINGLE_TWO));
+        chartItems.add(new ChartItem(6, "9",ChartItem.TYPE_SINGLE_ONE));
+        chartItems.add(new ChartItem(11, "10",ChartItem.TYPE_SINGLE_ONE));
+        chartItems.add(new ChartItem(1, "11",ChartItem.TYPE_SINGLE_TWO));
+        chartItems.add(new ChartItem(9, "12",ChartItem.TYPE_SINGLE_THREE));
+        //chartView.add(chartItems, ChartView.CHART_TYPE_SUGAR);
+        return chartItems;
     }
 
     /**
      * 画血压的两条线
-     * @param chartView
      */
-    private void drawDouble(ChartView chartView)
+    private void drawDouble()
     {
         ArrayList<ChartItem> chartItems = new ArrayList<>();
         ArrayList<ChartItem> chartItems2 = new ArrayList<>();
@@ -122,6 +124,6 @@ public class MainActivity extends Activity
         List<List<ChartItem>> chartItemListList = new ArrayList<>();
         chartItemListList.add(chartItems);
         chartItemListList.add(chartItems2);
-        chartView.setMultiData(chartItemListList);
+        //chartView.setMultiData(chartItemListList);
     }
 }

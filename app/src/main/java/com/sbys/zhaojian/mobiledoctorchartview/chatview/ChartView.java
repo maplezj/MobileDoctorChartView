@@ -20,7 +20,9 @@ import com.sbys.loggerlib.Logger;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 
 /**
@@ -44,6 +46,8 @@ public class ChartView extends View
     public static final int CHART_TYPE_HEART = 2;
     /*肺活量*/
     public static final int CHART_TYPE_LUNG = 4;
+    /*一组数据包含多条曲线*/
+    public static final int LINE_TYPE_MULT = 0xffffffff;
 
     private Paint paint = new Paint();
     private Path mPath = new Path();
@@ -52,83 +56,117 @@ public class ChartView extends View
     private float lineSmoothness = 0.13f;
     private PathMeasure mPathMeasure;
     /*多条线的数据*/
-    private List<List<ChartItem>> mChartItemListList = new ArrayList<>();
+    //private List<List<ChartItem>> mChartItemListList = new ArrayList<>();
     private DefaultValueEntity mValueEntity = new DefaultValueEntity();
     /*当前绘制中的多条数据*/
-    private List<List<ChartItem>> currentDrawingItemsList = new ArrayList<>();
+    //private List<List<ChartItem>> currentDrawingItemsList = new ArrayList<>();
     private ChartConfig mChartConfig = new ChartConfig();
-    private int type;
     private int xShowCount = 0;
     List<ChartItem> showingItems;
     private ChartDetailDrawable detailTextDrawable = new ChartDetailDrawable();
+
+    private Map<Integer, List<ChartItem>> mChartItemListMap = new HashMap<>();
+    private Map<Integer, List<ChartItem>> drawingListMap = new HashMap<>();
+    Map<Integer, List<Point>> pointListMap;
 
     public ChartView(Context context, AttributeSet attrs)
     {
         super(context, attrs);
     }
 
-    public void setEmpty(int type)
+/*    public void setEmpty(int type)
     {
         setMultiData(new ArrayList<List<ChartItem>>(), type);
-    }
+    }*/
 
     public void setConfig(ChartConfig config)
     {
         mChartConfig = config;
+        initData(mChartConfig.sourceChartItemListMap);
     }
 
-    public void setData(List<ChartItem> chartItemList, int type)
+    private void parseData(Map<Integer, List<ChartItem>> chartItemListMap)
     {
-        if (chartItemList == null)
+        int maxSize = 0;
+        for (Integer integer : chartItemListMap.keySet())
         {
-            Logger.d("data is null");
-        }
-        List<List<ChartItem>> chartItemListList = new ArrayList<>();
-        chartItemListList.add(chartItemList);
-        setMultiData(chartItemListList, type);
-
-    }
-
-    public void setMultiData(List<List<ChartItem>> chartItemListList)
-    {
-        setMultiData(chartItemListList, CHART_TYPE_PRESSURE);
-    }
-
-    private void setMultiData(List<List<ChartItem>> chartItemListList, int type)
-    {
-        if (checkValidate(chartItemListList, type))
-        {
-            Logger.d("list size:" + chartItemListList.size() + "|type:" + type);
-            this.type = type;
-            initData(chartItemListList);
-        }
-    }
-
-    private void initData(List<List<ChartItem>> chartItemListList)
-    {
-        currentDrawingItemsList.clear();
-        mChartItemListList.clear();
-        mChartConfig.isInit = false;
-        xShowCount = 0;
-
-        mChartItemListList.addAll(chartItemListList);
-        resetValueEntity();
-        for (List<ChartItem> chartItems : chartItemListList)
-        {
-            if (chartItems.size() <= mChartConfig.countX)
+            if (maxSize < chartItemListMap.get(integer).size())
             {
-                currentDrawingItemsList.add(chartItems);
-                if (xShowCount < chartItems.size())
+                maxSize = chartItemListMap.get(integer).size();
+            }
+
+            if (integer == LINE_TYPE_MULT)
+            {
+                List<ChartItem> chartItemList = chartItemListMap.get(integer);
+                for (int i = 0; i < chartItemList.size(); i++)
                 {
-                    xShowCount = chartItems.size();
+                    ChartItem item = chartItemList.get(i);
+                    item.setIndex(i);
+                    if (!mChartItemListMap.containsKey(item.getType()))
+                    {
+                        List<ChartItem> newList = new ArrayList<>();
+                        mChartItemListMap.put(item.getType(), newList);
+                        newList.add(item);
+                    }
+                    else
+                    {
+                        mChartItemListMap.get(item.getType()).add(item);
+                    }
                 }
             }
             else
             {
-                currentDrawingItemsList.add(chartItems.subList(chartItems.size() - mChartConfig.countX, chartItems.size()));
-                xShowCount = mChartConfig.countX;
+                for (int i = 0; i < chartItemListMap.get(integer).size(); i++)
+                {
+                    ChartItem item = chartItemListMap.get(integer).get(i);
+                    item.setIndex(i);
+                }
+
+                if (!mChartItemListMap.containsKey(integer))
+                {
+                    List<ChartItem> chartItemList = new ArrayList<>();
+                    mChartItemListMap.put(integer, chartItemList);
+                    chartItemList.addAll(chartItemListMap.get(integer));
+                }
+                else
+                {
+                    mChartItemListMap.get(integer).addAll(chartItemListMap.get(integer));
+                }
             }
         }
+        xShowCount = maxSize < mChartConfig.countX ? maxSize : mChartConfig.countX;
+        mChartConfig.endIndex = getMaxSize() - 1;
+        mChartConfig.startIndex = mChartConfig.endIndex - xShowCount+1;
+        parseShowData();
+    }
+
+    private void parseShowData()
+    {
+        drawingListMap.clear();
+        for (Integer integer : mChartItemListMap.keySet())
+        {
+            List<ChartItem> drawingItems = new ArrayList<>();
+            for (ChartItem item : mChartItemListMap.get(integer))
+            {
+                if (item.getIndex() >= mChartConfig.startIndex && item.getIndex() <= mChartConfig.endIndex)
+                {
+                    drawingItems.add(item);
+                }
+            }
+            drawingListMap.put(integer, drawingItems);
+        }
+
+    }
+
+    private void initData(Map<Integer, List<ChartItem>> chartItemListMap)
+    {
+        mChartItemListMap.clear();
+        drawingListMap.clear();
+        mChartConfig.isInit = false;
+        xShowCount = 0;
+
+        parseData(chartItemListMap);
+        resetValueEntity();
         updateValueEntity();
         invalidate();
     }
@@ -139,9 +177,9 @@ public class ChartView extends View
     private void updateValueEntity()
     {
         List<ChartItem> allDrawingItems = new ArrayList<>();
-        for (List<ChartItem> chartItems : currentDrawingItemsList)
+        for (Integer integer : drawingListMap.keySet())
         {
-            allDrawingItems.addAll(chartItems);
+            allDrawingItems.addAll(drawingListMap.get(integer));
         }
         if (!allDrawingItems.isEmpty())
         {
@@ -149,14 +187,15 @@ public class ChartView extends View
             ChartItem realMin = Collections.min(allDrawingItems);
             if (realMax.getValue() > mValueEntity.max)
             {
-                mValueEntity.max = getRealMaxByType(realMax.getValue(), type);
+                mValueEntity.max = getRealMaxByType(realMax.getValue(), mChartConfig.type);
             }
             if (realMin.getValue() < mValueEntity.min)
             {
-                mValueEntity.min = getRealMinByType(realMin.getValue(), type);
+                mValueEntity.min = getRealMinByType(realMin.getValue(), mChartConfig.type);
             }
         }
     }
+
 
     /**
      * 数据校验
@@ -197,27 +236,15 @@ public class ChartView extends View
     {
         resetValueEntity();
         int outCount = (int) Math.ceil((mChartConfig.xDistance + 0.001) / mChartConfig.unitXDistance);
-        for (int i = 0; i < mChartItemListList.size(); i++)
-        {
-            List<ChartItem> chartItems = mChartItemListList.get(i);
-            if (chartItems.size() > mChartConfig.countX + outCount)
-            {
-                currentDrawingItemsList.remove(i);
-                currentDrawingItemsList.add(i, chartItems.subList(outCount - 1, outCount + mChartConfig.countX));
-            }
-            else
-            {
-                currentDrawingItemsList.remove(i);
-                currentDrawingItemsList.add(i, chartItems.subList(outCount - 1, chartItems.size()));
-            }
-        }
-
+        mChartConfig.startIndex = outCount-1;
+        mChartConfig.endIndex = outCount + mChartConfig.countX-1;
+        parseShowData();
         updateValueEntity();
     }
 
     private void resetValueEntity()
     {
-        switch (type)
+        switch (mChartConfig.type)
         {
             case CHART_TYPE_PRESSURE:
                 mValueEntity.max = 150;
@@ -258,6 +285,7 @@ public class ChartView extends View
     protected void onDraw(Canvas canvas)
     {
         mChartConfig.init(mValueEntity, this);
+        createDrawingPoint();
         drawWrapper(canvas);
         drawYUnit(canvas);
         drawXUnit(canvas);
@@ -269,38 +297,34 @@ public class ChartView extends View
     /*画点上的详细信息*/
     private void drawPointText(Canvas canvas)
     {
-        int unitX = (int) mChartConfig.unitXDistance;
-        float startX = -mChartConfig.xDistance % unitX;
         canvas.saveLayer(-14, -ChartConfig.DEFAULT_PADDING - mChartConfig.chartHeight - mChartConfig.fontHeightX,
                 mChartConfig.chartWidth + 14, mChartConfig.fontHeightX + ChartConfig.DEFAULT_PADDING, null, Canvas.ALL_SAVE_FLAG);
-        for (List<ChartItem> currentDrawingItems : currentDrawingItemsList)
+        for (Integer integer : pointListMap.keySet())
         {
-            if (currentDrawingItems == null || currentDrawingItems.isEmpty())
+            List<Point> pointList = pointListMap.get(integer);
+            if (pointList == null || pointList.isEmpty())
             {
                 return;
             }
 
             paint.setStyle(Paint.Style.STROKE);
             paint.setStrokeWidth(5);
-            float deltaValue = mValueEntity.max - mValueEntity.min;
             if (xShowCount == 1 && mChartConfig.supportVerticalLine)
             {
-                ChartItem current = currentDrawingItems.get(0);
-                float valueY = mChartConfig.chartHeight * (current.getValue() - mValueEntity.min) / deltaValue;
-                if (drawVerticalLine(current.getIndex()))
+                Point current = pointList.get(0);
+                if (drawVerticalLine(current.index))
                 {
-                    drawDetailText(canvas, startX + unitX, -valueY);
+                    drawDetailText(canvas, current.x, current.y);
                 }
                 return;
             }
 
-            for (int i = 0; currentDrawingItems.size() > i; i++)
+            for (int i = 0; pointList.size() > i; i++)
             {
-                ChartItem current = currentDrawingItems.get(i);
-                float valueY = mChartConfig.chartHeight * (current.getValue() - mValueEntity.min) / deltaValue;
-                if (drawVerticalLine(current.getIndex()))
+                Point current = pointList.get(i);
+                if (drawVerticalLine(current.index))
                 {
-                    drawDetailText(canvas, startX + i * unitX, -valueY);
+                    drawDetailText(canvas, current.x, current.y);
                 }
             }
         }
@@ -309,21 +333,18 @@ public class ChartView extends View
     /*画点及竖线指示*/
     private void drawPoint(Canvas canvas)
     {
-        int unitX = (int) mChartConfig.unitXDistance;
-        float startX = -mChartConfig.xDistance % unitX;
         canvas.saveLayer(-14, -ChartConfig.DEFAULT_PADDING - mChartConfig.chartHeight - mChartConfig.fontHeightX,
                 mChartConfig.chartWidth + 14, mChartConfig.fontHeightX + ChartConfig.DEFAULT_PADDING, null, Canvas.ALL_SAVE_FLAG);
-        for (List<ChartItem> currentDrawingItems : currentDrawingItemsList)
+        for (Integer integer : pointListMap.keySet())
         {
-            //画X轴单位及点
-            if (currentDrawingItems == null || currentDrawingItems.isEmpty())
+            List<Point> pointList = pointListMap.get(integer);
+            if (pointList == null || pointList.isEmpty())
             {
                 return;
             }
-
             paint.setStyle(Paint.Style.STROKE);
             paint.setStrokeWidth(5);
-            drawPointNext(currentDrawingItems, canvas, unitX, startX, mValueEntity.max - mValueEntity.min);
+            drawPointNext(pointList, canvas);
         }
         canvas.restore();
     }
@@ -332,7 +353,7 @@ public class ChartView extends View
     private void drawXUnit(Canvas canvas)
     {
         paint.setPathEffect(null);
-        if (mChartItemListList == null || mChartItemListList.isEmpty())
+        if (mChartItemListMap == null || mChartItemListMap.isEmpty())
         {
             return;
         }
@@ -358,7 +379,6 @@ public class ChartView extends View
                 if (mChartConfig.mMoveType == MoveType.TYPE_VERTIAL_LINE)
                 {
                     mChartConfig.verticalIndex = getVerticalIndex(event.getX());
-                    mChartConfig.drawingVerticalIndex = getDrawingVerticalIndex(event.getX());
                     invalidate();
                 }
                 break;
@@ -375,7 +395,6 @@ public class ChartView extends View
                     if (mChartConfig.verticalIndex != getVerticalIndex(event.getX()))
                     {
                         mChartConfig.verticalIndex = getVerticalIndex(event.getX());
-                        mChartConfig.drawingVerticalIndex = getDrawingVerticalIndex(event.getX());
                         invalidate();
                     }
                 }
@@ -390,10 +409,9 @@ public class ChartView extends View
                     Log.d(TAG, "onTouchEvent: click point--------------->" + index + "|drawing:" + drawingIndx);
                     if (onClickPointListener != null)
                     {
-                        onClickPointListener.onClick(mChartItemListList.get(0).get(index));
+                        onClickPointListener.onClick(getChartItemByIndex(index));
                     }
                     mChartConfig.verticalIndex = index;
-                    mChartConfig.drawingVerticalIndex = getDrawingVerticalIndex(event.getX());
                     invalidate();
                 }
                 break;
@@ -419,13 +437,13 @@ public class ChartView extends View
         //如果向右滑动，并且已经滑动到最后一个，则不让滑动
         if (distanceX > 0 && isEnd())
         {
-            Logger.d("onScroll-----------------> is end");
+            Log.d("MainActivity","onScroll-----------------> is end");
             return;
         }
         //如果向左滑动，并且已经滑动到第一个，则不让滑动
         if (distanceX < 0 && isStart())
         {
-            Logger.d("onScroll------------------> is start");
+            Log.d("MainActivity","onScroll------------------> is start");
             return;
         }
         mChartConfig.xDistance = mChartConfig.xDistance + distanceX;
@@ -439,26 +457,64 @@ public class ChartView extends View
 
     private boolean isEnd()
     {
-        if (mChartItemListList == null || mChartItemListList.isEmpty())
+        if (mChartItemListMap == null || mChartItemListMap.isEmpty())
         {
             return true;
         }
-        List<ChartItem> chartItems = mChartItemListList.get(0);
-        List<ChartItem> currentDrawingItems = currentDrawingItemsList.get(0);
 
-        return chartItems.size() <= mChartConfig.countX
-                || currentDrawingItems.get(currentDrawingItems.size() - 1).equals(chartItems.get(chartItems.size() - 1)) && mChartConfig.xDistance >= mChartConfig.chartWidth * (chartItems.size() - mChartConfig.countX) / (mChartConfig.countX - 1.0);
+        return getMaxSize() <= mChartConfig.countX
+                || getLastDrawingIndex() >= getMaxIndex() && mChartConfig.xDistance >= mChartConfig.chartWidth * (getMaxSize() - mChartConfig.countX) / (mChartConfig.countX - 1.0);
+    }
+
+    private int getLastDrawingIndex()
+    {
+        int result = 0;
+        for (Integer integer : drawingListMap.keySet())
+        {
+            int tem = drawingListMap.get(integer).get(drawingListMap.get(integer).size() - 1).getIndex();
+            if (tem > result)
+            {
+                result = tem;
+            }
+        }
+        return result;
+    }
+
+    private int getMaxIndex()
+    {
+        int result = 0;
+        for (Integer integer : mChartItemListMap.keySet())
+        {
+            int tem = mChartItemListMap.get(integer).get(mChartItemListMap.get(integer).size() - 1).getIndex();
+            if (tem > result)
+            {
+                result = tem;
+            }
+        }
+        return result;
+    }
+
+    private int getMaxSize()
+    {
+        int result = 0;
+        for (Integer integer : mChartConfig.sourceChartItemListMap.keySet())
+        {
+            int tem = mChartConfig.sourceChartItemListMap.get(integer).size();
+            if (tem > result)
+            {
+                result = tem;
+            }
+        }
+        return result;
     }
 
     private boolean isStart()
     {
-        if (mChartItemListList == null || mChartItemListList.isEmpty())
+        if (mChartItemListMap == null || mChartItemListMap.isEmpty())
         {
             return true;
         }
-        List<ChartItem> chartItems = mChartItemListList.get(0);
-        List<ChartItem> currentDrawingItems = currentDrawingItemsList.get(0);
-        return currentDrawingItems.get(0).equals(chartItems.get(0)) && mChartConfig.xDistance <= 0;
+        return mChartConfig.startIndex == 0 && mChartConfig.xDistance <= 0;
     }
 
 
@@ -520,13 +576,58 @@ public class ChartView extends View
         canvas.drawPath(path, paint);
     }
 
+    private void createDrawingPoint()
+    {
+        pointListMap = new HashMap<>();
+        for (Integer integer : drawingListMap.keySet())
+        {
+            List<ChartItem> chartItems = drawingListMap.get(integer);
+            if (chartItems == null || chartItems.isEmpty())
+            {
+                return;
+            }
+            for (int i = 0; i < chartItems.size(); i++)
+            {
+                ChartItem currentDrawingItem = chartItems.get(i);
+                Point point = new Point();
+                point.index = currentDrawingItem.getIndex();
+                point.type = currentDrawingItem.getType();
+
+                int unitX = (int) mChartConfig.unitXDistance;
+                float deltaValue = mValueEntity.max - mValueEntity.min;
+                float startX = -mChartConfig.xDistance % unitX;
+
+                float valueY = mChartConfig.chartHeight * (currentDrawingItem.getValue() - mValueEntity.min) / deltaValue;
+
+                float x = startX + (currentDrawingItem.getIndex() - mChartConfig.startIndex) * unitX;
+                float y = -valueY;
+
+                point.x = x;
+                point.y = y;
+
+                if (pointListMap.containsKey(currentDrawingItem.getType()))
+                {
+                    pointListMap.get(currentDrawingItem.getType()).add(point);
+                }
+                else
+                {
+                    List<Point> pointList = new ArrayList<>();
+                    pointList.add(point);
+                    pointListMap.put(currentDrawingItem.getType(), pointList);
+                }
+            }
+        }
+
+    }
+
     @SuppressLint("WrongConstant")
     private void drawLine(Canvas canvas)
     {
         canvas.saveLayer(0, -ChartConfig.DEFAULT_PADDING - mChartConfig.chartHeight - mChartConfig.fontHeightX,
                 mChartConfig.chartWidth, mChartConfig.fontHeightX + ChartConfig.DEFAULT_PADDING, null, Canvas.ALL_SAVE_FLAG);
-        for (List<ChartItem> currentDrawingItems : currentDrawingItemsList)
+        for (Integer integer : drawingListMap.keySet())
         {
+            List<ChartItem> currentDrawingItems = drawingListMap.get(integer);
             //画X轴单位及点
             if (currentDrawingItems == null || currentDrawingItems.isEmpty())
             {
@@ -535,19 +636,20 @@ public class ChartView extends View
 
             paint.setStyle(Paint.Style.STROKE);
             paint.setStrokeWidth(5);
-            List<List<ChartItem>> itemsList = createLists(currentDrawingItems);
-            if (itemsList == null || itemsList.isEmpty())
+
+            if (pointListMap.isEmpty())
             {
                 return;
             }
-            for (List<ChartItem> subChartItems : itemsList)
+            for (Integer i : pointListMap.keySet())
             {
                 mPath.reset();
-                measurePath(subChartItems);
+                measurePath(pointListMap.get(i));
+
                 float distance = mPathMeasure.getLength();
                 if (mPathMeasure.getSegment(0, distance, mPath, true))
                 {
-                    setPaintColorByType(subChartItems.get(0).getType());
+                    setPaintColorByType(i);
                     canvas.drawPath(mPath, paint);
                 }
             }
@@ -558,34 +660,31 @@ public class ChartView extends View
     }
 
     @SuppressLint("WrongConstant")
-    private void drawPointNext(List<ChartItem> currentDrawingItems, Canvas canvas, int unitX, float startX, float deltaValue)
+    private void drawPointNext(List<Point> currentDrawingItems, Canvas canvas)
     {
         paint.setStyle(Paint.Style.FILL);
-        showingItems = currentDrawingItems;
         float scale;
 
         //如果只有一条，画在中间
         if (xShowCount == 1 && mChartConfig.supportVerticalLine)
         {
             scale = 1.5f;
-            ChartItem current = currentDrawingItems.get(0);
-            float valueY = mChartConfig.chartHeight * (current.getValue() - mValueEntity.min) / deltaValue;
-            drawPointDetail(canvas, startX + unitX, -valueY, scale, current.getType(), current.getIndex());
+            Point current = currentDrawingItems.get(0);
+            drawPointDetail(canvas, current.x, current.y, scale, current.type, current.index);
             return;
         }
 
         //否则从最左侧开始画
         for (int i = 0; currentDrawingItems.size() > i; i++)
         {
-            ChartItem current = currentDrawingItems.get(i);
-            float valueY = mChartConfig.chartHeight * (current.getValue() - mValueEntity.min) / deltaValue;
+            Point current = currentDrawingItems.get(i);
             scale = 1f;
 
-            if (scalePoint(currentDrawingItems.get(i).getIndex()))
+            if (scalePoint(currentDrawingItems.get(i).index))
             {
                 scale = 1.5f;
             }
-            drawPointDetail(canvas, startX + i * unitX, -valueY, scale, current.getType(), current.getIndex());
+            drawPointDetail(canvas, current.x, current.y, scale, current.type, current.index);
         }
         paint.setColor(Color.BLACK);
     }
@@ -605,7 +704,7 @@ public class ChartView extends View
     /*坐标的圆点是否要放大*/
     private boolean scalePoint(int index)
     {
-        if (mChartConfig.drawingVerticalIndex != index)
+        if (mChartConfig.verticalIndex != index)
         {
             return false;
         }
@@ -622,7 +721,7 @@ public class ChartView extends View
     /*是否要画竖直线*/
     private boolean drawVerticalLine(int index)
     {
-        return mChartConfig.drawingVerticalIndex == index && mChartConfig.supportVerticalLine && scalePoint(index);
+        return mChartConfig.verticalIndex == index && mChartConfig.supportVerticalLine && scalePoint(index);
     }
 
     private void drawVerticalLine(Canvas canvas, float x)
@@ -650,7 +749,6 @@ public class ChartView extends View
 
     private void drawDate(Canvas canvas, int unitX, float startX)
     {
-        List<ChartItem> currentDrawingItems = currentDrawingItemsList.get(0);
         paint.setTextAlign(Paint.Align.LEFT);
         paint.setColor(COLOR_TEXT);
 
@@ -670,7 +768,7 @@ public class ChartView extends View
         //如果只有一条，画在中间
         if (xShowCount == 1)
         {
-            ChartItem current = currentDrawingItems.get(0);
+            ChartItem current = getChartItemByIndex(0);
             //画日期
             if (mChartConfig.xUnitType == UnitType.TYPE_NUM)
             {
@@ -685,13 +783,17 @@ public class ChartView extends View
         }
 
         //否则从最左侧开始画
-        for (int i = 0; currentDrawingItems.size() > i; i++)
+        for (int i = mChartConfig.startIndex; i < mChartConfig.endIndex; i++)
         {
-            ChartItem current = currentDrawingItems.get(i);
+            ChartItem current = getChartItemByIndex(i);
+            if (current == null)
+            {
+                return;
+            }
             //画日期
             if (mChartConfig.xUnitType == UnitType.TYPE_NUM)
             {
-                canvas.drawText(current.getDate(), startX + i * unitX, mChartConfig.fontHeightX / 2 + 30, paint);
+                canvas.drawText(current.getDate(), startX + (i - mChartConfig.startIndex) * unitX, mChartConfig.fontHeightX / 2 + 30, paint);
             }
             else
             {
@@ -702,59 +804,22 @@ public class ChartView extends View
 
     }
 
-    private List<List<ChartItem>> createLists(List<ChartItem> currentDrawingItems)
+    private ChartItem getChartItemByIndex(int index)
     {
-        if (currentDrawingItems == null || currentDrawingItems.isEmpty())
+        for (Integer integer : mChartItemListMap.keySet())
         {
-            return null;
-        }
-        List<List<ChartItem>> lists = new ArrayList<>();
-        List<ChartItem> normalList = new ArrayList<>();
-        List<ChartItem> typeOneList = new ArrayList<>();
-        List<ChartItem> typeTwoList = new ArrayList<>();
-        List<ChartItem> typeThreeList = new ArrayList<>();
-        for (int i = 0; i < currentDrawingItems.size(); i++)
-        {
-            ChartItem currentDrawingItem = currentDrawingItems.get(i);
-            currentDrawingItem.setIndex(i);
-            switch (currentDrawingItem.getType())
+            for (ChartItem item : mChartItemListMap.get(integer))
             {
-                case ChartItem.TYPE_NORMAL:
-                    normalList.add(currentDrawingItem);
-                    break;
-                case ChartItem.TYPE_SINGLE_ONE:
-                    typeOneList.add(currentDrawingItem);
-                    break;
-                case ChartItem.TYPE_SINGLE_TWO:
-                    typeTwoList.add(currentDrawingItem);
-                    break;
-                case ChartItem.TYPE_SINGLE_THREE:
-                    typeThreeList.add(currentDrawingItem);
-                    break;
-                default:
-                    break;
+                if (item.getIndex() == index)
+                {
+                    return item;
+                }
             }
         }
-        if (!normalList.isEmpty())
-        {
-            lists.add(normalList);
-        }
-        if (!typeOneList.isEmpty())
-        {
-            lists.add(typeOneList);
-        }
-        if (!typeTwoList.isEmpty())
-        {
-            lists.add(typeTwoList);
-        }
-        if (!typeThreeList.isEmpty())
-        {
-            lists.add(typeThreeList);
-        }
-        return lists;
+        return null;
     }
 
-    private void measurePath(List<ChartItem> items)
+    private void measurePath(List<Point> items)
     {
         mPath = new Path();
         mAssistPath = new Path();
@@ -768,28 +833,23 @@ public class ChartView extends View
         float nextPointY;
 
         final int lineSize = items.size();
-        int unitX = (int) mChartConfig.unitXDistance;
-        float deltaValue = mValueEntity.max - mValueEntity.min;
-        float startX = -mChartConfig.xDistance % unitX;
         for (int valueIndex = 0; valueIndex < lineSize; ++valueIndex)
         {
-            ChartItem currentItem = items.get(valueIndex);
+            Point point = items.get(valueIndex);
 
             if (Float.isNaN(currentPointX))
             {
-                float valueY = mChartConfig.chartHeight * (currentItem.getValue() - mValueEntity.min) / deltaValue;
-
-                currentPointX = startX + currentItem.getIndex() * unitX;
-                currentPointY = -valueY;
+                currentPointX = point.x;
+                currentPointY = point.y;
             }
             if (Float.isNaN(previousPointX))
             {
                 //是否是第一个点
                 if (valueIndex > 0)
                 {
-                    ChartItem preItem = items.get(valueIndex - 1);
-                    previousPointX = startX + (currentItem.getIndex() - preItem.getIndex()) * unitX;
-                    previousPointY = -mChartConfig.chartHeight * (preItem.getValue() - mValueEntity.min) / deltaValue;
+                    Point prePoint = items.get(valueIndex - 1);
+                    previousPointX = prePoint.x;
+                    previousPointY = prePoint.y;
                 }
                 else
                 {
@@ -804,9 +864,9 @@ public class ChartView extends View
                 //是否是前两个点
                 if (valueIndex > 1)
                 {
-                    ChartItem prePreItem = items.get(valueIndex - 2);
-                    prePreviousPointX = startX + (currentItem.getIndex() - prePreItem.getIndex()) * unitX;
-                    prePreviousPointY = -mChartConfig.chartHeight * (prePreItem.getValue() - mValueEntity.min) / deltaValue;
+                    Point prePrePoint = items.get(valueIndex - 2);
+                    prePreviousPointX = prePrePoint.x;
+                    prePreviousPointY = prePrePoint.y;
                 }
                 else
                 {
@@ -819,11 +879,9 @@ public class ChartView extends View
             // 判断是不是最后一个点了
             if (valueIndex < lineSize - 1)
             {
-                ChartItem lastItem = items.get(valueIndex + 1);
-                float valueY = mChartConfig.chartHeight * (lastItem.getValue() - mValueEntity.min) / deltaValue;
-
-                nextPointX = startX + (lastItem.getIndex()) * unitX;
-                nextPointY = -valueY;
+                Point nextPoint = items.get(valueIndex + 1);
+                nextPointX = nextPoint.x;
+                nextPointY = nextPoint.y;
             }
             else
             {
@@ -977,6 +1035,8 @@ public class ChartView extends View
         private boolean supportVerticalLine = false;
         /*滑动模式*/
         private MoveType mMoveType = MoveType.TYPE_LINE;
+        /*曲线图类型（高血压、糖尿病、、、）*/
+        private int type;
 
         /*总宽度*/
         float totalWidth;
@@ -1007,7 +1067,14 @@ public class ChartView extends View
         /*竖线在所有数据中的位置*/
         private int verticalIndex;
         /*竖线在正在的数据中的位置*/
-        private int drawingVerticalIndex;
+        //private int drawingVerticalIndex;
+
+        private int startIndex = 0;
+        private int endIndex;
+
+        /*---------------------曲线数据------------------------*/
+        private Map<Integer, List<ChartItem>> sourceChartItemListMap = new HashMap<>();
+
 
         void init(DefaultValueEntity valueEntity, ChartView chartView)
         {
@@ -1059,12 +1126,12 @@ public class ChartView extends View
             }
 
             unitYDistance = chartHeight / (countY - 1);
-            if (!isInit && chartView.mChartItemListList != null && !chartView.mChartItemListList.isEmpty())
+            if (!isInit && chartView.mChartItemListMap != null && !chartView.mChartItemListMap.isEmpty())
             {
                 isInit = true;
                 if (chartView.xShowCount >= countX)
                 {
-                    xDistance = (float) (chartWidth * (chartView.mChartItemListList.get(0).size() - chartView.xShowCount) / (chartView.xShowCount - 1.0));
+                    xDistance = (float) (chartWidth * (chartView.getMaxSize() - chartView.xShowCount) / (chartView.xShowCount - 1.0));
                 }
                 else
                 {
@@ -1131,6 +1198,24 @@ public class ChartView extends View
             return this;
         }
 
+        public ChartConfigBuilder addLine(List<ChartItem> chartItems, int type)
+        {
+            mChartConfig.sourceChartItemListMap.put(type, chartItems);
+            return this;
+        }
+
+        public ChartConfigBuilder addMultTypeLine(List<ChartItem> chartItems)
+        {
+            mChartConfig.sourceChartItemListMap.put(LINE_TYPE_MULT, chartItems);
+            return this;
+        }
+
+        public ChartConfigBuilder setType(int type)
+        {
+            mChartConfig.type = type;
+            return this;
+        }
+
         public ChartConfig build()
         {
             return mChartConfig;
@@ -1147,6 +1232,14 @@ public class ChartView extends View
     public void setOnClickPointListener(OnClickPointListener onClickPointListener)
     {
         this.onClickPointListener = onClickPointListener;
+    }
+
+    private class Point
+    {
+        private float x;
+        private float y;
+        private int index;
+        private int type;
     }
 
 }
