@@ -865,8 +865,8 @@ public class ChartView extends View
             }
             else
             {
-                canvas.drawText(DateUtil.getDateDay(current.getDate()), startX + i * unitX, mChartConfig.fontHeightX/2, paint);
-                canvas.drawText(DateUtil.getDateHour(current.getDate()), startX + i * unitX, mChartConfig.fontHeightX, paint);
+                canvas.drawText(DateUtil.getDateDay(current.getDate()), startX + (i - mChartConfig.startIndex) * unitX, mChartConfig.fontHeightX / 2, paint);
+                canvas.drawText(DateUtil.getDateHour(current.getDate()), startX + (i - mChartConfig.startIndex) * unitX, mChartConfig.fontHeightX, paint);
             }
         }
         canvas.restore();
@@ -1198,7 +1198,7 @@ public class ChartView extends View
 
             startX = fontWidthY + DEFAULT_PADDING + FONT_PADDING;
             startY = DEFAULT_PADDING + 2 * unitYHeight + FONT_PADDING;
-            chartWidth = totalWidth - fontWidthY - 2 * DEFAULT_PADDING - unitXWidth;
+            chartWidth = totalWidth - fontWidthY - 2 * DEFAULT_PADDING - unitXWidth - fontWidthX / 2;
             chartHeight = totalHeight - 2 * unitYHeight - 2 * DEFAULT_PADDING - fontHeightX - 2 * FONT_PADDING;
 
             //如果只有一条数据，则分成两段，值放中间
