@@ -8,6 +8,7 @@ import android.util.Log;
 import com.sbys.zhaojian.mobiledoctorchartview.chatview.ChartDetailDrawable;
 import com.sbys.zhaojian.mobiledoctorchartview.chatview.ChartItem;
 import com.sbys.zhaojian.mobiledoctorchartview.chatview.ChartView;
+import com.sbys.zhaojian.mobiledoctorchartview.chatview.EmptyChartItem;
 import com.sbys.zhaojian.mobiledoctorchartview.chatview.HypertensionDrawable;
 
 import java.util.ArrayList;
@@ -25,7 +26,7 @@ public class MainActivity extends Activity
         ChartView chartView = findViewById(R.id.chatView);
         //chartView.setEmpty(ChartView.CHART_TYPE_HEART);
         chartView.setConfig(new ChartView.ChartConfigBuilder()
-                .setCountX(8)
+                .setCountX(10)
                 .setCountY(4)
                 .setUnitY("(cm)")
                 .setUnitX("(周)")
@@ -35,7 +36,7 @@ public class MainActivity extends Activity
                 .addLine(line1(), ChartItem.LINE_SOURCE)
                 .setColor(ChartItem.LINE_2, Color.rgb(86, 189, 114))
                 //.addMultTypeLine(drawDoubleSpecial())
-                .setType(ChartView.CHART_TYPE_SUGAR)
+                .setType(ChartView.CHART_TYPE_PRESSURE)
                 .showVertialLine(true)
                 .setDetailDrawable(new HypertensionDrawable())
                 .build());
@@ -43,9 +44,9 @@ public class MainActivity extends Activity
         chartView.setOnClickPointListener(new ChartView.OnClickPointListener()
         {
             @Override
-            public void onClick(ChartItem chartItem)
+            public void onClick(List<ChartItem> chartItem)
             {
-                Log.d(TAG, "onClick:----------------> " + chartItem.getValue());
+                Log.d(TAG, "onClick:----------------> " + chartItem.get(0).getValue());
             }
         });
 
@@ -80,10 +81,12 @@ public class MainActivity extends Activity
         ArrayList<ChartItem> chartItems = new ArrayList<>();
 
         //chartItems.add(new ChartItem(30, "1"));
+        chartItems.add(new EmptyChartItem("5"));
         chartItems.add(new ChartItem(35, "2"));
         chartItems.add(new ChartItem(40, "3"));
         chartItems.add(new ChartItem(45, "4"));
-        chartItems.add(new ChartItem(50, "5"));
+        //chartItems.add(new ChartItem(50, "5"));
+        chartItems.add(new EmptyChartItem("5"));
         chartItems.add(new ChartItem(55, "6"));
         chartItems.add(new ChartItem(60, "7"));
         chartItems.add(new ChartItem(65, "8"));

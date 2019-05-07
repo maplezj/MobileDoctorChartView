@@ -21,6 +21,7 @@ import com.sbys.loggerlib.Logger;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -185,6 +186,14 @@ public class ChartView extends View
         {
             allDrawingItems.addAll(drawingListMap.get(integer));
         }
+        for (Iterator iter = allDrawingItems.iterator(); iter.hasNext();)
+        {
+            if (iter.next() instanceof EmptyChartItem)
+            {
+                iter.remove();
+            }
+        }
+
         if (!allDrawingItems.isEmpty())
         {
             ChartItem realMax = Collections.max(allDrawingItems);
@@ -451,11 +460,15 @@ public class ChartView extends View
                 if (MotionEventHelper.isclick(event.getX(), event.getY()))
                 {
                     int index = getVerticalIndex(event.getX());
-                    int drawingIndx = getDrawingVerticalIndex(event.getX());
-                    Log.d(TAG, "onTouchEvent: click point--------------->" + index + "|drawing:" + drawingIndx);
+                    if (index > getMaxIndex())
+                    {
+                        index = getMaxIndex();
+                    }
+                    //int drawingIndx = getDrawingVerticalIndex(event.getX());
+                    Log.d(TAG, "onTouchEvent: click point--------------->" + index);
                     if (onClickPointListener != null)
                     {
-                        onClickPointListener.onClick(getChartItemByIndex(index));
+                        onClickPointListener.onClick(getChartItemsByIndex(index));
                     }
                     mChartConfig.verticalIndex = index;
                     invalidate();
@@ -472,11 +485,11 @@ public class ChartView extends View
         return (int) ((mChartConfig.xDistance + x - mChartConfig.startX) / mChartConfig.unitXDistance + 0.5);
     }
 
-    private int getDrawingVerticalIndex(float x)
+/*    private int getDrawingVerticalIndex(float x)
     {
         float rest = mChartConfig.xDistance % mChartConfig.unitXDistance;
         return (int) ((rest + x - mChartConfig.startX) / mChartConfig.unitXDistance + 0.5);
-    }
+    }*/
 
     private void scrollLine(float distanceX)
     {
@@ -635,6 +648,10 @@ public class ChartView extends View
             for (int i = 0; i < chartItems.size(); i++)
             {
                 ChartItem currentDrawingItem = chartItems.get(i);
+                if (currentDrawingItem instanceof EmptyChartItem)
+                {
+                    continue;
+                }
                 Point point = new Point();
                 point.source = currentDrawingItem;
                 point.index = currentDrawingItem.getIndex();
@@ -752,9 +769,8 @@ public class ChartView extends View
     private boolean scalePoint(int index)
     {
         if (mChartConfig.verticalIndex != index
-                || !(mChartConfig.sourceEndIndex < 0 || index <= mChartConfig.sourceEndIndex))
+                || !(mChartConfig.sourceEndIndex < 0 || index <= mChartConfig.sourceEndIndex) || isEmptySource(index))
         {
-
             return false;
         }
         if (mChartConfig.mMoveType == MoveType.TYPE_VERTIAL_LINE)
@@ -771,7 +787,26 @@ public class ChartView extends View
     private boolean drawVerticalLine(int index)
     {
         return mChartConfig.verticalIndex == index && mChartConfig.supportVerticalLine && scalePoint(index)
-                && (mChartConfig.sourceEndIndex < 0 || index <= mChartConfig.sourceEndIndex);
+                && (mChartConfig.sourceEndIndex < 0 || index <= mChartConfig.sourceEndIndex) && !isEmptySource(index);
+    }
+
+    /*此点上是否不存在数据，只有标准线*/
+    private boolean isEmptySource(int index)
+    {
+        List<ChartItem> chartItemList = getChartItemsByIndex(index);
+        if (chartItemList == null || chartItemList.isEmpty())
+        {
+            return true;
+        }
+
+        for (ChartItem item : chartItemList)
+        {
+            if (item instanceof EmptyChartItem)
+            {
+                return true;
+            }
+        }
+        return false;
     }
 
     private void drawVerticalLine(Canvas canvas, float x)
@@ -821,7 +856,7 @@ public class ChartView extends View
         //如果只有一条，画在中间
         if (xShowCount == 1)
         {
-            ChartItem current = getChartItemByIndex(0);
+            ChartItem current = getChartItemsByIndex(0).get(0);
             //画日期
             if (mChartConfig.xUnitType == UnitType.TYPE_NUM)
             {
@@ -838,7 +873,7 @@ public class ChartView extends View
         //否则从最左侧开始画
         for (int i = mChartConfig.startIndex; i <= mChartConfig.endIndex; i++)
         {
-            ChartItem current = getChartItemByIndex(i);
+            ChartItem current = getChartItemsByIndex(i).get(0);
             if (current == null)
             {
                 return;
@@ -857,19 +892,20 @@ public class ChartView extends View
 
     }
 
-    private ChartItem getChartItemByIndex(int index)
+    private List<ChartItem> getChartItemsByIndex(int index)
     {
+        List<ChartItem> chartItemList = new ArrayList<>();
         for (Integer integer : mChartItemListMap.keySet())
         {
             for (ChartItem item : mChartItemListMap.get(integer))
             {
                 if (item.getIndex() == index)
                 {
-                    return item;
+                    chartItemList.add(item);
                 }
             }
         }
-        return null;
+        return chartItemList;
     }
 
     private void measurePath(List<Point> items)
@@ -1314,7 +1350,7 @@ public class ChartView extends View
 
     public interface OnClickPointListener
     {
-        void onClick(ChartItem chartItem);
+        void onClick(List<ChartItem> chartItem);
     }
 
     public OnClickPointListener onClickPointListener;
