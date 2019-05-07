@@ -56,14 +56,9 @@ public class ChartView extends View
     /*赛贝尔曲线的控制*/
     private float lineSmoothness = 0.13f;
     private PathMeasure mPathMeasure;
-    /*多条线的数据*/
-    //private List<List<ChartItem>> mChartItemListList = new ArrayList<>();
     private DefaultValueEntity mValueEntity = new DefaultValueEntity();
-    /*当前绘制中的多条数据*/
-    //private List<List<ChartItem>> currentDrawingItemsList = new ArrayList<>();
     private ChartConfig mChartConfig = new ChartConfig();
     private int xShowCount = 0;
-    List<ChartItem> showingItems;
 
     private Map<Integer, List<ChartItem>> mChartItemListMap = new HashMap<>();
     private Map<Integer, List<ChartItem>> drawingListMap = new HashMap<>();
@@ -424,7 +419,7 @@ public class ChartView extends View
         float startX = -mChartConfig.xDistance % unitX;
 
         drawDate(canvas, unitX, startX);
-        canvas.restore();
+
     }
 
     @Override
@@ -597,12 +592,12 @@ public class ChartView extends View
         for (int i = 0; i < mChartConfig.countY; i++)
         {
             String stringY = String.format("%.1f", startY + i * unitY);
-            canvas.drawText(stringY, -10, (float) (mChartConfig.chartHeight * (1 - i / (mChartConfig.countY - 1.0))), paint);
+            canvas.drawText(stringY, -ChartConfig.FONT_PADDING, (float) (mChartConfig.chartHeight * (1 - i / (mChartConfig.countY - 1.0))), paint);
         }
 
         if (!TextUtils.isEmpty(mChartConfig.unitYText))
         {
-            canvas.drawText(mChartConfig.unitYText, -10, -unitY - ChartConfig.FONT_PADDING, paint);
+            canvas.drawText(mChartConfig.unitYText, -ChartConfig.FONT_PADDING, -mChartConfig.unitYHeight - ChartConfig.FONT_PADDING, paint);
         }
 
         //画正常值基准线
@@ -825,15 +820,10 @@ public class ChartView extends View
     {
         paint.setTextAlign(Paint.Align.LEFT);
         paint.setColor(COLOR_TEXT);
-
-        canvas.saveLayer(-mChartConfig.fontWidthX / 2, -ChartConfig.DEFAULT_PADDING - mChartConfig.chartHeight - mChartConfig.fontHeightX,
-                mChartConfig.chartWidth + mChartConfig.fontWidthX / 2 + mChartConfig.unitXWidth + ChartConfig.FONT_PADDING,
-                mChartConfig.fontHeightX + ChartConfig.DEFAULT_PADDING, null, Canvas.ALL_SAVE_FLAG);
         if (!TextUtils.isEmpty(mChartConfig.unitXText))
         {
-            canvas.drawText(mChartConfig.unitXText, mChartConfig.chartWidth + +mChartConfig.fontWidthX / 2 + ChartConfig.FONT_PADDING, mChartConfig.fontHeightX / 2 + 30, paint);
+            canvas.drawText(mChartConfig.unitXText, mChartConfig.chartWidth + +mChartConfig.fontWidthX / 2 + ChartConfig.FONT_PADDING, mChartConfig.fontHeightX, paint);
         }
-        canvas.restore();
         paint.setTextAlign(Paint.Align.CENTER);
         canvas.saveLayer(-mChartConfig.fontWidthX / 2, -ChartConfig.DEFAULT_PADDING - mChartConfig.chartHeight - mChartConfig.fontHeightX,
                 mChartConfig.chartWidth + mChartConfig.fontWidthX / 2,
@@ -846,12 +836,12 @@ public class ChartView extends View
             //画日期
             if (mChartConfig.xUnitType == UnitType.TYPE_NUM)
             {
-                canvas.drawText(current.getDate(), startX + unitX, mChartConfig.fontHeightX / 2 + 30, paint);
+                canvas.drawText(current.getDate(), startX + unitX, mChartConfig.fontHeightX, paint);
             }
             else
             {
-                canvas.drawText(DateUtil.getDateDay(current.getDate()), startX + unitX, mChartConfig.fontHeightX / 2 + 20, paint);
-                canvas.drawText(DateUtil.getDateHour(current.getDate()), startX + unitX, mChartConfig.fontHeightX + 30, paint);
+                canvas.drawText(DateUtil.getDateDay(current.getDate()), startX + unitX, mChartConfig.fontHeightX/2, paint);
+                canvas.drawText(DateUtil.getDateHour(current.getDate()), startX + unitX, mChartConfig.fontHeightX, paint);
             }
             return;
         }
@@ -859,6 +849,10 @@ public class ChartView extends View
         //否则从最左侧开始画
         for (int i = mChartConfig.startIndex; i <= mChartConfig.endIndex; i++)
         {
+            if (getChartItemsByIndex(i).size() == 0)
+            {
+                return;
+            }
             ChartItem current = getChartItemsByIndex(i).get(0);
             if (current == null)
             {
@@ -867,14 +861,15 @@ public class ChartView extends View
             //画日期
             if (mChartConfig.xUnitType == UnitType.TYPE_NUM)
             {
-                canvas.drawText(current.getDate(), startX + (i - mChartConfig.startIndex) * unitX, mChartConfig.fontHeightX / 2 + 30, paint);
+                canvas.drawText(current.getDate(), startX + (i - mChartConfig.startIndex) * unitX, mChartConfig.fontHeightX, paint);
             }
             else
             {
-                canvas.drawText(DateUtil.getDateDay(current.getDate()), startX + i * unitX, mChartConfig.fontHeightX / 2 + 20, paint);
-                canvas.drawText(DateUtil.getDateHour(current.getDate()), startX + i * unitX, mChartConfig.fontHeightX + 30, paint);
+                canvas.drawText(DateUtil.getDateDay(current.getDate()), startX + i * unitX, mChartConfig.fontHeightX/2, paint);
+                canvas.drawText(DateUtil.getDateHour(current.getDate()), startX + i * unitX, mChartConfig.fontHeightX, paint);
             }
         }
+        canvas.restore();
 
     }
 
@@ -1093,8 +1088,8 @@ public class ChartView extends View
         /*默认字体大小*/
         private static final int DEFAULT_FONT_SIZE = 30;
         /*边距*/
-        public static final int DEFAULT_PADDING = 50;
-
+        public static final int DEFAULT_PADDING = 20;
+        /*文字间距*/
         public static final int FONT_PADDING = 10;
 
         /*是否已经初始化（只初始化一次）*/
@@ -1176,6 +1171,8 @@ public class ChartView extends View
             totalWidth = chartView.getWidth();
 
             Paint paint = new Paint();
+            paint.setFakeBoldText(false);
+            paint.setStrokeWidth(0);
             paint.setTextSize(DEFAULT_FONT_SIZE);
             float fontHeight = CommonUtil.calculateFontHeight(paint);
             fontWidthY = CommonUtil.calculateFontWidth(paint, valueEntity.max + "");
@@ -1199,10 +1196,10 @@ public class ChartView extends View
                 unitXWidth = CommonUtil.calculateFontWidth(paint, unitXText + FONT_PADDING);
             }
 
-            startX = fontWidthY + DEFAULT_PADDING;
-            startY = DEFAULT_PADDING + unitYHeight;
+            startX = fontWidthY + DEFAULT_PADDING + FONT_PADDING;
+            startY = DEFAULT_PADDING + 2 * unitYHeight + FONT_PADDING;
             chartWidth = totalWidth - fontWidthY - 2 * DEFAULT_PADDING - unitXWidth;
-            chartHeight = totalHeight - fontHeightX - 2 * DEFAULT_PADDING - unitYHeight;
+            chartHeight = totalHeight - 2 * unitYHeight - 2 * DEFAULT_PADDING - fontHeightX - 2 * FONT_PADDING;
 
             //如果只有一条数据，则分成两段，值放中间
             if (chartView.xShowCount <= 1)

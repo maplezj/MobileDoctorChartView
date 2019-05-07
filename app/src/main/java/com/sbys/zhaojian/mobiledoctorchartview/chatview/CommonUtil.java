@@ -37,9 +37,9 @@ public class CommonUtil
 
     public static float calculateFontHeight(Paint paint)
     {
-        Rect bounds = new Rect();
-        paint.getTextBounds("s", 0, "s".length(), bounds);
-        return bounds.height();
+        Paint.FontMetrics fm = paint.getFontMetrics();
+
+        return  (float)Math.ceil(fm.descent - fm.ascent);
     }
 
     public static float calculateFontWidth(Paint paint, String font)
