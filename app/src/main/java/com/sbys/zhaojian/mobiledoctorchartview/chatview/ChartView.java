@@ -336,6 +336,24 @@ public class ChartView extends View
             }
         }
 
+        if (tem.keySet().size() == 1)
+        {
+            int index = tem.keySet().iterator().next();
+            List<Point> pointList = tem.get(index);
+            List<Point> copy = new ArrayList<>();
+            for (Point point : pointList)
+            {
+                Point pointCopy = (Point) point.clone();
+                pointCopy.x = mChartConfig.chartWidth/2;
+                copy.add(pointCopy);
+            }
+            if (drawVerticalLine(index))
+            {
+                drawDetailText(canvas, copy);
+            }
+            return;
+        }
+
         for (Integer integer : tem.keySet())
         {
             List<Point> pointList = tem.get(integer);
@@ -732,9 +750,9 @@ public class ChartView extends View
         //如果只有一条，画在中间
         if (xShowCount == 1 && mChartConfig.supportVerticalLine)
         {
-            scale = 1.5f;
             Point current = currentDrawingItems.get(0);
-            drawPointDetail(canvas, current.x, current.y, scale, current.type, current.index);
+            scale = scalePoint(current.index) ? 1.5f : 1f;
+            drawPointDetail(canvas, mChartConfig.chartWidth/2, current.y, scale, current.type, current.index);
             return;
         }
 
@@ -742,12 +760,7 @@ public class ChartView extends View
         for (int i = 0; currentDrawingItems.size() > i; i++)
         {
             Point current = currentDrawingItems.get(i);
-            scale = 1f;
-
-            if (scalePoint(currentDrawingItems.get(i).index))
-            {
-                scale = 1.5f;
-            }
+            scale = scalePoint(current.index) ? 1.5f : 1f;
             drawPointDetail(canvas, current.x, current.y, scale, current.type, current.index);
         }
         paint.setColor(Color.BLACK);
@@ -860,12 +873,12 @@ public class ChartView extends View
             //画日期
             if (mChartConfig.xUnitType == UnitType.TYPE_NUM)
             {
-                canvas.drawText(current.getDate(), startX + unitX, mChartConfig.fontHeightX / 2, paint);
+                canvas.drawText(current.getDate(), startX + unitX, mChartConfig.fontHeightX / 2 + 30, paint);
             }
             else
             {
-                canvas.drawText(DateUtil.getDateDay(current.getDate()), startX + unitX, mChartConfig.fontHeightX / 2, paint);
-                canvas.drawText(DateUtil.getDateHour(current.getDate()), startX + unitX, mChartConfig.fontHeightX, paint);
+                canvas.drawText(DateUtil.getDateDay(current.getDate()), startX + unitX, mChartConfig.fontHeightX / 2 + 20, paint);
+                canvas.drawText(DateUtil.getDateHour(current.getDate()), startX + unitX, mChartConfig.fontHeightX + 30, paint);
             }
             return;
         }
@@ -1173,7 +1186,7 @@ public class ChartView extends View
         /*X轴滑动的距离*/
         private float xDistance = 0;
         /*竖线在所有数据中的位置*/
-        private int verticalIndex;
+        private int verticalIndex = -1;
         /*竖线在正在的数据中的位置*/
         //private int drawingVerticalIndex;
 
@@ -1360,7 +1373,7 @@ public class ChartView extends View
         this.onClickPointListener = onClickPointListener;
     }
 
-    public static class Point
+    public static class Point implements Cloneable
     {
         private float x;
         private float y;
@@ -1386,6 +1399,21 @@ public class ChartView extends View
         public ChartItem getSource()
         {
             return source;
+        }
+
+
+        @Override
+        public Object clone()
+        {
+            try
+            {
+                return super.clone();
+            }
+            catch (CloneNotSupportedException e)
+            {
+                e.printStackTrace();
+            }
+            return null;
         }
     }
 
