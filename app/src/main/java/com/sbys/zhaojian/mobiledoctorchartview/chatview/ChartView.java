@@ -312,34 +312,16 @@ public class ChartView extends View
     {
         canvas.saveLayer(-14, -ChartConfig.DEFAULT_PADDING - mChartConfig.chartHeight - mChartConfig.fontHeightX,
                 mChartConfig.chartWidth + 14, mChartConfig.fontHeightX + ChartConfig.DEFAULT_PADDING, null, Canvas.ALL_SAVE_FLAG);
-        Map<Integer, List<Point>> tem = new HashMap<>();
-        for (Integer integer : pointListMap.keySet())
+        Map<Integer,List<Point>> transferMap = transferMap();
+        if (transferMap == null || transferMap.isEmpty())
         {
-            List<Point> pointList = pointListMap.get(integer);
-            if (pointList == null || pointList.isEmpty())
-            {
-                return;
-            }
-
-            for (Point point : pointList)
-            {
-                if (tem.containsKey(point.index))
-                {
-                    tem.get(point.index).add(point);
-                }
-                else
-                {
-                    List<Point> chartItemList = new ArrayList<>();
-                    chartItemList.add(point);
-                    tem.put(point.index, chartItemList);
-                }
-            }
+            return;
         }
 
-        if (tem.keySet().size() == 1)
+        if (transferMap.keySet().size() == 1)
         {
-            int index = tem.keySet().iterator().next();
-            List<Point> pointList = tem.get(index);
+            int index = transferMap.keySet().iterator().next();
+            List<Point> pointList = transferMap.get(index);
             List<Point> copy = new ArrayList<>();
             for (Point point : pointList)
             {
@@ -354,9 +336,9 @@ public class ChartView extends View
             return;
         }
 
-        for (Integer integer : tem.keySet())
+        for (Integer integer : transferMap.keySet())
         {
-            List<Point> pointList = tem.get(integer);
+            List<Point> pointList = transferMap.get(integer);
             if (pointList == null || pointList.isEmpty())
             {
                 return;
@@ -370,37 +352,35 @@ public class ChartView extends View
             }
 
         }
+    }
 
-
-       /* for (Integer integer : pointListMap.keySet())
+    /*将pointListMap转换成以index为key的map*/
+    private Map<Integer, List<Point>> transferMap()
+    {
+          Map<Integer, List<Point>> result = new HashMap<>();
+        for (Integer integer : pointListMap.keySet())
         {
             List<Point> pointList = pointListMap.get(integer);
             if (pointList == null || pointList.isEmpty())
             {
-                return;
+                return result;
             }
 
-            paint.setStyle(Paint.Style.STROKE);
-            paint.setStrokeWidth(5);
-            if (xShowCount == 1 && mChartConfig.supportVerticalLine)
+            for (Point point : pointList)
             {
-                Point current = pointList.get(0);
-                if (drawVerticalLine(current.index))
+                if (result.containsKey(point.index))
                 {
-                    drawDetailText(canvas, current.x, current.y);
+                    result.get(point.index).add(point);
                 }
-                return;
-            }
-
-            for (int i = 0; pointList.size() > i; i++)
-            {
-                Point current = pointList.get(i);
-                if (drawVerticalLine(current.index))
+                else
                 {
-                    drawDetailText(canvas, current.x, current.y);
+                    List<Point> chartItemList = new ArrayList<>();
+                    chartItemList.add(point);
+                    result.put(point.index, chartItemList);
                 }
             }
-        }*/
+        }
+        return result;
     }
 
     /*画点及竖线指示*/
@@ -408,15 +388,21 @@ public class ChartView extends View
     {
         canvas.saveLayer(-14, -ChartConfig.DEFAULT_PADDING - mChartConfig.chartHeight - mChartConfig.fontHeightX,
                 mChartConfig.chartWidth + 14, mChartConfig.fontHeightX + ChartConfig.DEFAULT_PADDING, null, Canvas.ALL_SAVE_FLAG);
-        for (Integer integer : pointListMap.keySet())
+        Map<Integer,List<Point>> transfer = transferMap();
+        if (transfer == null || transfer.isEmpty())
         {
-            List<Point> pointList = pointListMap.get(integer);
-            if (pointList == null || pointList.isEmpty())
-            {
-                return;
-            }
+            return;
+        }
+        for (Integer integer : transfer.keySet())
+        {
+            List<Point> pointList = transfer.get(integer);
             paint.setStyle(Paint.Style.STROKE);
             paint.setStrokeWidth(5);
+            if (drawVerticalLine(integer))
+            {
+                float x = xShowCount == 1 ? mChartConfig.chartWidth / 2 : pointList.get(0).x;
+                drawVerticalLine(canvas, x);
+            }
             drawPointNext(pointList, canvas);
         }
         canvas.restore();
@@ -747,31 +733,18 @@ public class ChartView extends View
         paint.setStyle(Paint.Style.FILL);
         float scale;
 
-        //如果只有一条，画在中间
-        if (xShowCount == 1 && mChartConfig.supportVerticalLine)
-        {
-            Point current = currentDrawingItems.get(0);
-            scale = scalePoint(current.index) ? 1.5f : 1f;
-            drawPointDetail(canvas, mChartConfig.chartWidth/2, current.y, scale, current.type, current.index);
-            return;
-        }
-
-        //否则从最左侧开始画
         for (int i = 0; currentDrawingItems.size() > i; i++)
         {
             Point current = currentDrawingItems.get(i);
             scale = scalePoint(current.index) ? 1.5f : 1f;
-            drawPointDetail(canvas, current.x, current.y, scale, current.type, current.index);
+            float x = xShowCount == 1 ? mChartConfig.chartWidth / 2 : current.x;
+            drawPointDetail(canvas, x, current.y, scale, current.type, current.index);
         }
         paint.setColor(Color.BLACK);
     }
 
     private void drawPointDetail(Canvas canvas, float x, float y, float scale, int dataType, int index)
     {
-        if (drawVerticalLine(index))
-        {
-            drawVerticalLine(canvas, x);
-        }
         setPaintColorByType(dataType);
         canvas.drawCircle(x, y, 12 * scale, paint);
         paint.setColor(Color.WHITE);
