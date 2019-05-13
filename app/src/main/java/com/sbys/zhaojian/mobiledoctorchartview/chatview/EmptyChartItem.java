@@ -7,9 +7,9 @@ package com.sbys.zhaojian.mobiledoctorchartview.chatview;
  */
 public class EmptyChartItem extends ChartItem
 {
-    public EmptyChartItem(String date)
+    public EmptyChartItem(String valueX)
     {
-        super(-1, date);
+        super(-1, valueX);
     }
 
 }

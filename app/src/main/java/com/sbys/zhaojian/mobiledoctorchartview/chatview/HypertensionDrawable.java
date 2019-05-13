@@ -35,12 +35,12 @@ public class HypertensionDrawable extends ChartDetailDrawable
         {
             if (point.getType() == ChartItem.LINE_1)
             {
-                date = point.getSource().getDate();
-                ssy = (int) point.getSource().getValue();
+                date = point.getSource().getValueX();
+                ssy = (int) point.getSource().getValueY();
             }
             else if (point.getType() == ChartItem.LINE_SOURCE)
             {
-                szy = (int) point.getSource().getValue();
+                szy = (int) point.getSource().getValueY();
             }
         }
         String format =  "随访日期：%s\n血         压：%s/%smmHg\n用药信息：头孢、埃斯皮里、感冒药、发烧药";

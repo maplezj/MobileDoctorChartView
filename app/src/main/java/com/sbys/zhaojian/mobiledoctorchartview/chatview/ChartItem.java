@@ -8,43 +8,41 @@ import android.support.annotation.NonNull;
 
 public class ChartItem implements Comparable<ChartItem>
 {
-    /*源数据，在有多条先的情况下以那条线为准*/
+    /*源数据，在有多条先的情况下以那条线为准,如果所画的线中有此种类型的线，
+    * 则此线范围外的点点击无效*/
     public static final int LINE_SOURCE = 0;
 
     public static final int LINE_1 = 1;
-    /*X轴不重复的曲线1*/
     public static final int LINE_2 = 2;
-    /*X轴不重复的曲线2*/
     public static final int LINE_3 = 3;
-    /*X轴不重复的曲线3*/
     public static final int LINE_4 = 4;
-    private float value;
-    private String date;
+    private float valueY;
+    private String valueX;
     private int type;
     private int index;
 
-    public ChartItem(float value, String date)
+    public ChartItem(float valueY, String valueX)
     {
-        this(value, date, LINE_1);
+        this(valueY, valueX, LINE_1);
     }
 
 
 
-    public ChartItem(float value, String date, int type)
+    public ChartItem(float valueY, String valueX, int type)
     {
-        this.value = value;
-        this.date = date;
+        this.valueY = valueY;
+        this.valueX = valueX;
         this.type = type;
     }
 
-    public float getValue()
+    public float getValueY()
     {
-        return value;
+        return valueY;
     }
 
-    public String getDate()
+    public String getValueX()
     {
-        return date;
+        return valueX;
     }
 
     public void setType(int type)
@@ -72,11 +70,11 @@ public class ChartItem implements Comparable<ChartItem>
     @Override
     public int compareTo(@NonNull ChartItem o)
     {
-        if (value > o.value)
+        if (valueY > o.valueY)
         {
             return 1;
         }
-        else if (value < o.value)
+        else if (valueY < o.valueY)
         {
             return -1;
         }

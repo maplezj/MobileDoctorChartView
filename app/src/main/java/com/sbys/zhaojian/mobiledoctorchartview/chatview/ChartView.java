@@ -193,13 +193,13 @@ public class ChartView extends View
         {
             ChartItem realMax = Collections.max(allDrawingItems);
             ChartItem realMin = Collections.min(allDrawingItems);
-            if (realMax.getValue() > mValueEntity.max)
+            if (realMax.getValueY() > mValueEntity.max)
             {
-                mValueEntity.max = getRealMaxByType(realMax.getValue(), mChartConfig.type);
+                mValueEntity.max = getRealMaxByType(realMax.getValueY(), mChartConfig.type);
             }
-            if (realMin.getValue() < mValueEntity.min)
+            if (realMin.getValueY() < mValueEntity.min)
             {
-                mValueEntity.min = getRealMinByType(realMin.getValue(), mChartConfig.type);
+                mValueEntity.min = getRealMinByType(realMin.getValueY(), mChartConfig.type);
             }
         }
     }
@@ -442,6 +442,7 @@ public class ChartView extends View
                 MotionEventHelper.preX = event.getX();
                 if (mChartConfig.mMoveType == MoveType.TYPE_LINE)
                 {
+                    mChartConfig.verticalIndex = -1;
                     scrollLine(pre - event.getX());
                 }
                 else if (mChartConfig.mMoveType == MoveType.TYPE_VERTIAL_LINE)
@@ -483,12 +484,6 @@ public class ChartView extends View
     {
         return (int) ((mChartConfig.xDistance + x - mChartConfig.startX) / mChartConfig.unitXDistance + 0.5);
     }
-
-/*    private int getDrawingVerticalIndex(float x)
-    {
-        float rest = mChartConfig.xDistance % mChartConfig.unitXDistance;
-        return (int) ((rest + x - mChartConfig.startX) / mChartConfig.unitXDistance + 0.5);
-    }*/
 
     private void scrollLine(float distanceX)
     {
@@ -663,7 +658,7 @@ public class ChartView extends View
                 float deltaValue = mValueEntity.max - mValueEntity.min;
                 float startX = -mChartConfig.xDistance % unitX;
 
-                float valueY = mChartConfig.chartHeight * (currentDrawingItem.getValue() - mValueEntity.min) / deltaValue;
+                float valueY = mChartConfig.chartHeight * (currentDrawingItem.getValueY() - mValueEntity.min) / deltaValue;
 
                 float x = startX + (currentDrawingItem.getIndex() - mChartConfig.startIndex) * unitX;
                 float y = -valueY;
@@ -785,12 +780,12 @@ public class ChartView extends View
 
         for (ChartItem item : chartItemList)
         {
-            if (item instanceof EmptyChartItem)
+            if (!(item instanceof EmptyChartItem))
             {
-                return true;
+                return false;
             }
         }
-        return false;
+        return true;
     }
 
     private void drawVerticalLine(Canvas canvas, float x)
@@ -839,12 +834,12 @@ public class ChartView extends View
             //画日期
             if (mChartConfig.xUnitType == UnitType.TYPE_NUM)
             {
-                canvas.drawText(current.getDate(), startX + unitX, mChartConfig.fontHeightX, paint);
+                canvas.drawText(current.getValueX(), startX + unitX, mChartConfig.fontHeightX, paint);
             }
             else
             {
-                canvas.drawText(DateUtil.getDateDay(current.getDate()), startX + unitX, mChartConfig.fontHeightX/2, paint);
-                canvas.drawText(DateUtil.getDateHour(current.getDate()), startX + unitX, mChartConfig.fontHeightX, paint);
+                canvas.drawText(ChartUtils.getDateDay(current.getValueX()), startX + unitX, mChartConfig.fontHeightX/2, paint);
+                canvas.drawText(ChartUtils.getDateHour(current.getValueX()), startX + unitX, mChartConfig.fontHeightX, paint);
             }
             return;
         }
@@ -864,12 +859,12 @@ public class ChartView extends View
             //画日期
             if (mChartConfig.xUnitType == UnitType.TYPE_NUM)
             {
-                canvas.drawText(current.getDate(), startX + (i - mChartConfig.startIndex) * unitX, mChartConfig.fontHeightX, paint);
+                canvas.drawText(current.getValueX(), startX + (i - mChartConfig.startIndex) * unitX, mChartConfig.fontHeightX, paint);
             }
             else
             {
-                canvas.drawText(DateUtil.getDateDay(current.getDate()), startX + (i - mChartConfig.startIndex) * unitX, mChartConfig.fontHeightX / 2, paint);
-                canvas.drawText(DateUtil.getDateHour(current.getDate()), startX + (i - mChartConfig.startIndex) * unitX, mChartConfig.fontHeightX, paint);
+                canvas.drawText(ChartUtils.getDateDay(current.getValueX()), startX + (i - mChartConfig.startIndex) * unitX, mChartConfig.fontHeightX / 2, paint);
+                canvas.drawText(ChartUtils.getDateHour(current.getValueX()), startX + (i - mChartConfig.startIndex) * unitX, mChartConfig.fontHeightX, paint);
             }
         }
         canvas.restore();
@@ -1039,24 +1034,6 @@ public class ChartView extends View
         {
             paint.setColor(mChartConfig.defaultLineColor);
         }
-      /*  switch (type)
-        {
-            case ChartItem.LINE_1:
-                paint.setColor(Color.rgb(86, 189, 114));//绿
-                break;
-            case ChartItem.LINE_2:
-                paint.setColor(Color.rgb(86, 189, 114));//绿
-                break;
-            case ChartItem.LINE_3:
-                paint.setColor(Color.rgb(78, 193, 242));//蓝
-                break;
-            case ChartItem.LINE_4:
-                paint.setColor(Color.RED);
-                break;
-            default:
-                paint.setColor(Color.RED);
-                break;
-        }*/
     }
 
     private static class DefaultValueEntity
@@ -1115,7 +1092,7 @@ public class ChartView extends View
         /*支持竖线提示*/
         private boolean supportVerticalLine = false;
         /*是否显示标准线*/
-        private boolean showStandLine = false;
+        private boolean showStandLine = true;
         /*滑动模式*/
         private MoveType mMoveType = MoveType.TYPE_LINE;
         /*曲线图类型（高血压、糖尿病、、、）*/
@@ -1179,16 +1156,16 @@ public class ChartView extends View
             paint.setFakeBoldText(false);
             paint.setStrokeWidth(0);
             paint.setTextSize(DEFAULT_FONT_SIZE);
-            float fontHeight = CommonUtil.calculateFontHeight(paint);
-            fontWidthY = CommonUtil.calculateFontWidth(paint, valueEntity.max + "");
+            float fontHeight = ChartUtils.calculateFontHeight(paint);
+            fontWidthY = ChartUtils.calculateFontWidth(paint, valueEntity.max + "");
             if (xUnitType == UnitType.TYPE_DATE)
             {
-                fontWidthX = CommonUtil.calculateFontWidth(paint, "00:00:00");
+                fontWidthX = ChartUtils.calculateFontWidth(paint, "00:00:00");
                 fontHeightX = 2 * fontHeight;
             }
             else
             {
-                fontWidthX = CommonUtil.calculateFontWidth(paint, "99");
+                fontWidthX = ChartUtils.calculateFontWidth(paint, "99");
                 fontHeightX = fontHeight;
             }
             if (!TextUtils.isEmpty(unitYText))
@@ -1198,7 +1175,7 @@ public class ChartView extends View
 
             if (!TextUtils.isEmpty(unitXText))
             {
-                unitXWidth = CommonUtil.calculateFontWidth(paint, unitXText + FONT_PADDING);
+                unitXWidth = ChartUtils.calculateFontWidth(paint, unitXText + FONT_PADDING);
             }
 
             startX = fontWidthY + DEFAULT_PADDING + FONT_PADDING;
