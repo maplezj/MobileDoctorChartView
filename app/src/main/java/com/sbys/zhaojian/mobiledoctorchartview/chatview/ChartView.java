@@ -600,20 +600,23 @@ public class ChartView extends View
             canvas.drawText(mChartConfig.unitYText, -ChartConfig.FONT_PADDING, -mChartConfig.unitYHeight - ChartConfig.FONT_PADDING, paint);
         }
 
-        //画正常值基准线
-        paint.setColor(COLOR_DASH_LINE);
-        DashPathEffect dashPathEffect = new DashPathEffect(new float[]{12, 6, 12, 6}, 0);
-        paint.setPathEffect(dashPathEffect);
-        float lowY = mChartConfig.chartHeight * (1 - ((mValueEntity.normalLow - mValueEntity.min) / (mValueEntity.max - mValueEntity.min)));
-        Path path1 = new Path();
-        path1.moveTo(0, lowY);
-        path1.lineTo(mChartConfig.chartWidth, lowY);
-        canvas.drawPath(path1, paint);
-        float heightY = mChartConfig.chartHeight * (1 - ((mValueEntity.normalHigh - mValueEntity.min) / (mValueEntity.max - mValueEntity.min)));
-        Path path2 = new Path();
-        path2.moveTo(0, heightY);
-        path2.lineTo(mChartConfig.chartWidth, heightY);
-        canvas.drawPath(path2, paint);
+        if (mChartConfig.showStandLine)
+        {
+            //画正常值基准线
+            paint.setColor(COLOR_DASH_LINE);
+            DashPathEffect dashPathEffect = new DashPathEffect(new float[]{12, 6, 12, 6}, 0);
+            paint.setPathEffect(dashPathEffect);
+            float lowY = mChartConfig.chartHeight * (1 - ((mValueEntity.normalLow - mValueEntity.min) / (mValueEntity.max - mValueEntity.min)));
+            Path path1 = new Path();
+            path1.moveTo(0, lowY);
+            path1.lineTo(mChartConfig.chartWidth, lowY);
+            canvas.drawPath(path1, paint);
+            float heightY = mChartConfig.chartHeight * (1 - ((mValueEntity.normalHigh - mValueEntity.min) / (mValueEntity.max - mValueEntity.min)));
+            Path path2 = new Path();
+            path2.moveTo(0, heightY);
+            path2.lineTo(mChartConfig.chartWidth, heightY);
+            canvas.drawPath(path2, paint);
+        }
     }
 
     /**
@@ -1111,6 +1114,8 @@ public class ChartView extends View
         private UnitType xUnitType = UnitType.TYPE_DATE;
         /*支持竖线提示*/
         private boolean supportVerticalLine = false;
+        /*是否显示标准线*/
+        private boolean showStandLine = false;
         /*滑动模式*/
         private MoveType mMoveType = MoveType.TYPE_LINE;
         /*曲线图类型（高血压、糖尿病、、、）*/
@@ -1322,6 +1327,12 @@ public class ChartView extends View
         public ChartConfigBuilder setDetailDrawable(ChartDetailDrawable drawable)
         {
             mChartConfig.detailTextDrawable = drawable;
+            return this;
+        }
+
+        public ChartConfigBuilder showStandLine(boolean showStandLine)
+        {
+            mChartConfig.showStandLine = showStandLine;
             return this;
         }
 
