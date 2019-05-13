@@ -5,7 +5,6 @@ import android.graphics.Color;
 import android.os.Bundle;
 import android.util.Log;
 
-import com.sbys.zhaojian.mobiledoctorchartview.chatview.ChartDetailDrawable;
 import com.sbys.zhaojian.mobiledoctorchartview.chatview.ChartItem;
 import com.sbys.zhaojian.mobiledoctorchartview.chatview.ChartView;
 import com.sbys.zhaojian.mobiledoctorchartview.chatview.EmptyChartItem;
@@ -26,11 +25,11 @@ public class MainActivity extends Activity
         ChartView chartView = findViewById(R.id.chatView);
         //chartView.setEmpty(ChartView.CHART_TYPE_HEART);
         chartView.setConfig(new ChartView.ChartConfigBuilder()
-                .setCountX(10)
+                .setCountX(5)
                 .setCountY(4)
                 .setUnitY("(cm)")
                 .setUnitX("(周)")
-                .setUnitXType(ChartView.UnitType.TYPE_NUM)
+                .setUnitXType(ChartView.UnitType.TYPE_DATE)
                 .setMoveType(ChartView.MoveType.TYPE_VERTIAL_LINE)
                 .addLine(drawSingle(), ChartItem.LINE_1)
                 .addLine(line1(), ChartItem.LINE_SOURCE)
@@ -46,7 +45,7 @@ public class MainActivity extends Activity
             @Override
             public void onClick(List<ChartItem> chartItem)
             {
-                Log.d(TAG, "onClick:----------------> " + chartItem.get(0).getValue());
+                Log.d(TAG, "onClick:----------------> " + chartItem.get(0).getValueY());
             }
         });
 
@@ -62,7 +61,7 @@ public class MainActivity extends Activity
     {
         ArrayList<ChartItem> chartItems = new ArrayList<>();
 
-        chartItems.add(new ChartItem(100, "1"));
+        chartItems.add(new ChartItem(100, "2019"));
         chartItems.add(new ChartItem(80, "2"));
         chartItems.add(new ChartItem(50, "3"));
         chartItems.add(new ChartItem(60, "4"));
@@ -72,6 +71,7 @@ public class MainActivity extends Activity
         chartItems.add(new ChartItem(40, "8"));
         chartItems.add(new ChartItem(120, "9"));
         chartItems.add(new ChartItem(70, "10"));
+
         //chartView.setData(chartItems, ChartView.CHART_TYPE_HEART);
         return chartItems;
     }
@@ -81,17 +81,19 @@ public class MainActivity extends Activity
         ArrayList<ChartItem> chartItems = new ArrayList<>();
 
         //chartItems.add(new ChartItem(30, "1"));
-        chartItems.add(new EmptyChartItem("5"));
+        chartItems.add(new ChartItem(30,"5"));
         chartItems.add(new ChartItem(35, "2"));
         chartItems.add(new ChartItem(40, "3"));
         chartItems.add(new ChartItem(45, "4"));
         //chartItems.add(new ChartItem(50, "5"));
-        chartItems.add(new EmptyChartItem("5"));
         chartItems.add(new ChartItem(55, "6"));
         chartItems.add(new ChartItem(60, "7"));
         chartItems.add(new ChartItem(65, "8"));
+        chartItems.add(new EmptyChartItem("5"));
         chartItems.add(new ChartItem(70, "9"));
-        chartItems.add(new ChartItem(80, "10"));
+        //chartItems.add(new ChartItem(80, "10"));
+        //chartItems.add(new EmptyChartItem("11"));
+
         //chartView.setData(chartItems, ChartView.CHART_TYPE_HEART);
         return chartItems;
     }

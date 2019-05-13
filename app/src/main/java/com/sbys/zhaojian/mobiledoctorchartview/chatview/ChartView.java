@@ -16,8 +16,6 @@ import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 
-import com.sbys.loggerlib.Logger;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -216,7 +214,7 @@ public class ChartView extends View
     {
         if (chartItemListList == null)
         {
-            Logger.d("data is null");
+            Log.d("checkValidate","data is null");
             return false;
         }
         if (type == CHART_TYPE_PRESSURE)
@@ -227,12 +225,12 @@ public class ChartView extends View
             }
             if (chartItemListList.size() != 2)
             {
-                Logger.d("checkValidate: 血压数据必须为2条" + "|size:" + chartItemListList.size());
+                Log.d("checkValidate", "checkValidate: 血压数据必须为2条" + "|size:" + chartItemListList.size());
                 return false;
             }
             else if (chartItemListList.get(0).size() != chartItemListList.get(1).size())
             {
-                Logger.d("checkValidate: 血压大的两条数据长度必须一致");
+                Log.d("checkValidate", "checkValidate: 血压大的两条数据长度必须一致");
                 return false;
             }
             return true;
