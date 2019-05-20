@@ -68,6 +68,14 @@ public class ChartView extends View
         initData(mChartConfig.sourceChartItemListMap);
     }
 
+    public void clear()
+    {
+        if (mChartConfig != null)
+        {
+            mChartConfig.sourceChartItemListMap.clear();
+        }
+    }
+
     private void parseData(Map<Integer, List<ChartItem>> chartItemListMap)
     {
         int maxSize = 0;
