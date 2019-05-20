@@ -52,7 +52,7 @@ public class ChartUtils
     {
         if (!TextUtils.isEmpty(dateString)) {
             try {
-                return getDateString(getDate(dateString, "M/d HH:mm"), "M-d");
+                return getDateString(getDate(dateString, "yyyy-MM-dd HH:mm"), "MM-dd");
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -64,7 +64,7 @@ public class ChartUtils
     {
         if (!TextUtils.isEmpty(dateString)) {
             try {
-                return getDateString(getDate(dateString, "M/d HH:mm:ss"), "HH:mm:ss");
+                return getDateString(getDate(dateString, "yyyy-MM-dd HH:mm"), "HH:mm:ss");
             } catch (Exception e) {
                 e.printStackTrace();
             }
