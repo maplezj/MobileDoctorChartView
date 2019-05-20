@@ -35,8 +35,8 @@ public class MainActivity extends Activity
                 .addLine(line1(), ChartItem.LINE_SOURCE)
                 .setColor(ChartItem.LINE_2, Color.rgb(86, 189, 114))
                 //.addMultTypeLine(drawDoubleSpecial())
-                .setType(ChartView.CHART_TYPE_PRESSURE)
                 .showVertialLine(true)
+                .setStandLineValue(new ChartView.ValueEntity(150, 50, 139, 89))
                 .setDetailDrawable(new HypertensionDrawable())
                 .build());
 

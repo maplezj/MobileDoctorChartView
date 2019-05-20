@@ -35,16 +35,6 @@ public class ChartView extends View
     public static final int COLOR_DASH_LINE = Color.parseColor("#CCCCCC");
     public static final int WRAPPER_LINE = Color.parseColor("#E3E3E3");
 
-    /*血压*/
-    public static final int CHART_TYPE_PRESSURE = 0;
-    /*血糖*/
-    public static final int CHART_TYPE_SUGAR = 1;
-    /*体温*/
-    public static final int CHART_TYPE_TEMP = 3;
-    /*心率*/
-    public static final int CHART_TYPE_HEART = 2;
-    /*肺活量*/
-    public static final int CHART_TYPE_LUNG = 4;
     /*一组数据包含多条曲线*/
     public static final int LINE_TYPE_MULT = 0xffffffff;
 
@@ -54,7 +44,7 @@ public class ChartView extends View
     /*赛贝尔曲线的控制*/
     private float lineSmoothness = 0.13f;
     private PathMeasure mPathMeasure;
-    private DefaultValueEntity mValueEntity = new DefaultValueEntity();
+    private ValueEntity mValueEntity = new ValueEntity();
     private ChartConfig mChartConfig = new ChartConfig();
     private int xShowCount = 0;
 
@@ -193,49 +183,13 @@ public class ChartView extends View
             ChartItem realMin = Collections.min(allDrawingItems);
             if (realMax.getValueY() > mValueEntity.max)
             {
-                mValueEntity.max = getRealMaxByType(realMax.getValueY(), mChartConfig.type);
+                mValueEntity.max = getRealMaxByType(realMax.getValueY());
             }
             if (realMin.getValueY() < mValueEntity.min)
             {
-                mValueEntity.min = getRealMinByType(realMin.getValueY(), mChartConfig.type);
+                mValueEntity.min = getRealMinByType(realMin.getValueY());
             }
         }
-    }
-
-
-    /**
-     * 数据校验
-     *
-     * @param chartItemListList
-     * @param type
-     * @return
-     */
-    private boolean checkValidate(List<List<ChartItem>> chartItemListList, int type)
-    {
-        if (chartItemListList == null)
-        {
-            Log.d("checkValidate","data is null");
-            return false;
-        }
-        if (type == CHART_TYPE_PRESSURE)
-        {
-            if (chartItemListList.isEmpty())
-            {
-                return true;
-            }
-            if (chartItemListList.size() != 2)
-            {
-                Log.d("checkValidate", "checkValidate: 血压数据必须为2条" + "|size:" + chartItemListList.size());
-                return false;
-            }
-            else if (chartItemListList.get(0).size() != chartItemListList.get(1).size())
-            {
-                Log.d("checkValidate", "checkValidate: 血压大的两条数据长度必须一致");
-                return false;
-            }
-            return true;
-        }
-        return true;
     }
 
     private void updateData()
@@ -250,7 +204,11 @@ public class ChartView extends View
 
     private void resetValueEntity()
     {
-        switch (mChartConfig.type)
+        mValueEntity.normalLow = mChartConfig.standValueEntity.normalLow;
+        mValueEntity.normalHigh = mChartConfig.standValueEntity.normalHigh;
+        mValueEntity.min = mChartConfig.standValueEntity.min;
+        mValueEntity.max = mChartConfig.standValueEntity.max;
+        /*switch (mChartConfig.type)
         {
             case CHART_TYPE_PRESSURE:
                 mValueEntity.max = 150;
@@ -284,7 +242,7 @@ public class ChartView extends View
                 break;
             default:
                 break;
-        }
+        }*/
     }
 
     @Override
@@ -993,32 +951,34 @@ public class ChartView extends View
         mPathMeasure = new PathMeasure(mPath, false);
     }
 
-    private float getRealMaxByType(float value, int type)
+    private float getRealMaxByType(float value)
     {
-        //心率取10的倍数
+        return (float) Math.ceil(value/ mChartConfig.scaleRate) * mChartConfig.scaleRate;
+        /*//心率取10的倍数
         if (type == CHART_TYPE_HEART)
         {
             return (float) (Math.ceil(value / 10) * 10);
         }
-        /*其他取整*/
+        *//*其他取整*//*
         else
         {
             return (float) Math.ceil(value);
-        }
+        }*/
     }
 
-    private float getRealMinByType(float value, int type)
+    private float getRealMinByType(float value)
     {
-        //心率取10的倍数
+        return (float) Math.floor(value / mChartConfig.scaleRate) * mChartConfig.scaleRate;
+      /*  //心率取10的倍数
         if (type == CHART_TYPE_HEART)
         {
             return (float) (Math.floor(value / 10) * 10);
         }
-        /*其他取整*/
+        *//*其他取整*//*
         else
         {
             return (float) Math.floor(value);
-        }
+        }*/
     }
 
 
@@ -1034,12 +994,24 @@ public class ChartView extends View
         }
     }
 
-    private static class DefaultValueEntity
+    public static class ValueEntity
     {
         float max;
         float min;
         float normalHigh;
         float normalLow;
+
+        public ValueEntity()
+        {
+        }
+
+        public ValueEntity(float max, float min, float normalHigh, float normalLow)
+        {
+            this.max = max;
+            this.min = min;
+            this.normalHigh = normalHigh;
+            this.normalLow = normalLow;
+        }
     }
 
     public enum UnitType
@@ -1091,10 +1063,13 @@ public class ChartView extends View
         private boolean supportVerticalLine = false;
         /*是否显示标准线*/
         private boolean showStandLine = true;
+        /*标准线*/
+        private ValueEntity standValueEntity;
+        /*y轴取最大值最小值时的缩放比例(取10，100，100)，默认取整，即不缩放*/
+        private float scaleRate = 1;
+
         /*滑动模式*/
         private MoveType mMoveType = MoveType.TYPE_LINE;
-        /*曲线图类型（高血压、糖尿病、、、）*/
-        private int type;
 
         private int defaultLineColor = Color.rgb(78, 193, 242);
 
@@ -1145,7 +1120,7 @@ public class ChartView extends View
         private Map<Integer, List<ChartItem>> sourceChartItemListMap = new HashMap<>();
 
 
-        void init(DefaultValueEntity valueEntity, ChartView chartView)
+        void init(ValueEntity valueEntity, ChartView chartView)
         {
             totalHeight = chartView.getHeight();
             totalWidth = chartView.getWidth();
@@ -1281,12 +1256,6 @@ public class ChartView extends View
             return this;
         }
 
-        public ChartConfigBuilder setType(int type)
-        {
-            mChartConfig.type = type;
-            return this;
-        }
-
         public ChartConfigBuilder setColor(int type, int color)
         {
             mChartConfig.colorMap.put(type, color);
@@ -1308,6 +1277,18 @@ public class ChartView extends View
         public ChartConfigBuilder showStandLine(boolean showStandLine)
         {
             mChartConfig.showStandLine = showStandLine;
+            return this;
+        }
+
+        public ChartConfigBuilder setStandLineValue(ValueEntity standLineValue)
+        {
+            mChartConfig.standValueEntity = standLineValue;
+            return this;
+        }
+
+        public ChartConfigBuilder setYScaleRate(float scaleRate)
+        {
+            mChartConfig.scaleRate = scaleRate;
             return this;
         }
 
