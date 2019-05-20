@@ -64,7 +64,7 @@ public class ChartUtils
     {
         if (!TextUtils.isEmpty(dateString)) {
             try {
-                return getDateString(getDate(dateString, "yyyy-MM-dd HH:mm"), "HH:mm:ss");
+                return getDateString(getDate(dateString, "yyyy-MM-dd HH:mm:ss"), "HH:mm:ss");
             } catch (Exception e) {
                 e.printStackTrace();
             }
