@@ -661,6 +661,7 @@ public class ChartView extends View
 
             paint.setStyle(Paint.Style.STROKE);
             paint.setStrokeWidth(5);
+            paint.setAntiAlias(true);
 
             if (pointListMap.isEmpty())
             {
@@ -712,7 +713,9 @@ public class ChartView extends View
     private boolean scalePoint(int index)
     {
         if (mChartConfig.verticalIndex != index
-                || !(mChartConfig.sourceEndIndex < 0 || index <= mChartConfig.sourceEndIndex) || isEmptySource(index))
+                || !(mChartConfig.sourceEndIndex < 0 || index <= mChartConfig.sourceEndIndex)
+                || isEmptySource(index)
+                || !mChartConfig.supportVerticalLine)
         {
             return false;
         }
