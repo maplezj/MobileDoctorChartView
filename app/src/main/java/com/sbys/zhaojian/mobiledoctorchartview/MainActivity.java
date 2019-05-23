@@ -37,7 +37,7 @@ public class MainActivity extends Activity
                 //.addMultTypeLine(drawDoubleSpecial())
                 .showVertialLine(true)
                 .setStandLineValue(new ChartView.ValueEntity(150, 50, 139, 89))
-                .setDetailDrawable(new HypertensionDrawable())
+                .setDetailDrawable(new HypertensionDrawable(this))
                 .build());
 
         chartView.setOnClickPointListener(new ChartView.OnClickPointListener()

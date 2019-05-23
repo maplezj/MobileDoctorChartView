@@ -1,5 +1,6 @@
 package com.sbys.zhaojian.mobiledoctorchartview.chatview;
 
+import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.ColorFilter;
@@ -29,6 +30,13 @@ public abstract class ChartDetailDrawable extends Drawable
     private int chartWidth;
     private int chartHeight;
     protected List<ChartView.Point> mChartItemList;
+    private Context mContext;
+
+    public ChartDetailDrawable(Context context)
+    {
+        super();
+        mContext = context;
+    }
 
     @Override
     public void draw(@NonNull Canvas canvas)
@@ -83,7 +91,7 @@ public abstract class ChartDetailDrawable extends Drawable
         paint.setTextSize(34);
         paint.setColor(Color.WHITE);
         //String message = "随访日期：2019-02-12\n血         压：110/88mmHg\n用药信息：头孢、埃斯皮里、感冒药、发烧药";
-        StaticLayout myStaticLayout = new StaticLayout(createContent(), paint, chartWidth/2, Layout.Alignment.ALIGN_NORMAL, 1.2f, 0.0f, false);
+        StaticLayout myStaticLayout = new StaticLayout(createContent(), paint, (int) ChartUtils.dpToPx(mContext, 140), Layout.Alignment.ALIGN_NORMAL, 1.2f, 0.0f, false);
 
         mPaint.setColor(Color.BLACK);
         mPaint.setAlpha(178);

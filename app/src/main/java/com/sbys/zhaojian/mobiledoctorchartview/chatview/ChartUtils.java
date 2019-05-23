@@ -1,8 +1,11 @@
 package com.sbys.zhaojian.mobiledoctorchartview.chatview;
 
+import android.content.Context;
 import android.graphics.Paint;
 import android.graphics.Rect;
 import android.text.TextUtils;
+import android.util.DisplayMetrics;
+import android.util.TypedValue;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -70,5 +73,37 @@ public class ChartUtils
             }
         }
         return "";
+    }
+
+    public static float dpToPx(Context context, float value) {
+        return applyDimension(context, TypedValue.COMPLEX_UNIT_DIP, value);
+    }
+
+    /**
+     * @param context
+     * @param unit TypedValue 如TypedValue.COMPLEX_UNIT_DIP
+     * @param value
+     * @return
+     */
+    public static float applyDimension(Context context, int unit, float value) {
+        return applyDimension(unit, value, context.getResources().getDisplayMetrics());
+    }
+
+    private static float applyDimension(int unit, float value, DisplayMetrics metrics){
+        switch (unit) {
+            case TypedValue.COMPLEX_UNIT_PX:
+                return value;
+            case TypedValue.COMPLEX_UNIT_DIP:
+                return value * metrics.density;
+            case TypedValue.COMPLEX_UNIT_SP:
+                return value * metrics.scaledDensity;
+            case TypedValue.COMPLEX_UNIT_PT:
+                return value * metrics.xdpi * (1.0f/72);
+            case TypedValue.COMPLEX_UNIT_IN:
+                return value * metrics.xdpi;
+            case TypedValue.COMPLEX_UNIT_MM:
+                return value * metrics.xdpi * (1.0f/25.4f);
+        }
+        return 0;
     }
 }

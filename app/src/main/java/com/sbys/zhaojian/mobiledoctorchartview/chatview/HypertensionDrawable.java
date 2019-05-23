@@ -1,5 +1,7 @@
 package com.sbys.zhaojian.mobiledoctorchartview.chatview;
 
+import android.content.Context;
+
 /**
  * @author zhaojian
  * @time 2019/5/5 17:55
@@ -7,6 +9,11 @@ package com.sbys.zhaojian.mobiledoctorchartview.chatview;
  */
 public class HypertensionDrawable extends ChartDetailDrawable
 {
+
+    public HypertensionDrawable(Context context)
+    {
+        super(context);
+    }
 
     @Override
     protected void setPointXY()
@@ -43,7 +50,7 @@ public class HypertensionDrawable extends ChartDetailDrawable
                 szy = (int) point.getSource().getValueY();
             }
         }
-        String format =  "随访日期：%s\n血         压：%s/%smmHg\n用药信息：头孢、埃斯皮里、感冒药、发烧药";
+        String format =  "随访日期：%s\n血         糖：%s/%smmHg\n用药信息：头孢、埃斯皮里、感冒药、发烧药";
         return String.format(format, date, ssy, szy);
         //return  "随访日期：2019-02-12\n血         压：110/88mmHg\n用药信息：头孢、埃斯皮里、感冒药、发烧药";
     }
