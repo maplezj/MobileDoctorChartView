@@ -389,6 +389,10 @@ public class ChartView extends View
     @Override
     public boolean onTouchEvent(MotionEvent event)
     {
+        if (drawingListMap.isEmpty())
+        {
+            return true;
+        }
         switch (event.getAction())
         {
             case MotionEvent.ACTION_DOWN:
