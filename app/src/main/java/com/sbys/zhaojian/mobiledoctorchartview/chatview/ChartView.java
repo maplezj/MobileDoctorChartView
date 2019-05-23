@@ -386,10 +386,24 @@ public class ChartView extends View
 
     }
 
+    /*是否有数据*/
+    private boolean isEmpty()
+    {
+        for (Integer integer : mChartConfig.sourceChartItemListMap.keySet())
+        {
+            List<ChartItem> itemList = mChartConfig.sourceChartItemListMap.get(integer);
+            if (!itemList.isEmpty())
+            {
+                return false;
+            }
+        }
+        return true;
+    }
+
     @Override
     public boolean onTouchEvent(MotionEvent event)
     {
-        if (drawingListMap.isEmpty())
+        if (isEmpty())
         {
             return true;
         }
