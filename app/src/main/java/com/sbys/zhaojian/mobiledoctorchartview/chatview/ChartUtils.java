@@ -27,6 +27,10 @@ public class ChartUtils
 
     public static float calculateFontWidth(Paint paint, String font)
     {
+        if (TextUtils.isEmpty(font))
+        {
+            return 0;
+        }
         Rect bounds = new Rect();
         paint.getTextBounds(font, 0, font.length(), bounds);
         return bounds.width();

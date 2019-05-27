@@ -345,8 +345,8 @@ public class ChartView extends View
     /*画点及竖线指示*/
     private void drawPoint(Canvas canvas)
     {
-        canvas.saveLayer(-14, -ChartConfig.DEFAULT_PADDING - mChartConfig.chartHeight - mChartConfig.fontHeightX,
-                mChartConfig.chartWidth + 14, mChartConfig.fontHeightX + ChartConfig.DEFAULT_PADDING, null, Canvas.ALL_SAVE_FLAG);
+        canvas.saveLayer(-20, -ChartConfig.DEFAULT_PADDING - mChartConfig.chartHeight - mChartConfig.fontHeightX,
+                mChartConfig.chartWidth + 20, mChartConfig.fontHeightX + ChartConfig.DEFAULT_PADDING, null, Canvas.ALL_SAVE_FLAG);
         Map<Integer,List<Point>> transfer = transferMap();
         if (transfer == null || transfer.isEmpty())
         {
@@ -580,7 +580,7 @@ public class ChartView extends View
         if (mChartConfig.showStandLine)
         {
             //画正常值基准线
-            paint.setColor(COLOR_DASH_LINE);
+            paint.setColor(mChartConfig.standLineLowColor);
             DashPathEffect dashPathEffect = new DashPathEffect(new float[]{12, 6, 12, 6}, 0);
             paint.setPathEffect(dashPathEffect);
             float lowY = mChartConfig.chartHeight * (1 - ((mValueEntity.normalLow - mValueEntity.min) / (mValueEntity.max - mValueEntity.min)));
@@ -588,6 +588,8 @@ public class ChartView extends View
             path1.moveTo(0, lowY);
             path1.lineTo(mChartConfig.chartWidth, lowY);
             canvas.drawPath(path1, paint);
+
+            paint.setColor(mChartConfig.standLineHighColor);
             float heightY = mChartConfig.chartHeight * (1 - ((mValueEntity.normalHigh - mValueEntity.min) / (mValueEntity.max - mValueEntity.min)));
             Path path2 = new Path();
             path2.moveTo(0, heightY);
@@ -1069,7 +1071,7 @@ public class ChartView extends View
         /*边距*/
         public static final int DEFAULT_PADDING = 20;
         /*文字间距*/
-        public static final int FONT_PADDING = 10;
+        public static final int FONT_PADDING = 20;
 
         /*是否已经初始化（只初始化一次）*/
         boolean isInit = false;
@@ -1093,9 +1095,13 @@ public class ChartView extends View
         /*是否显示标准线*/
         private boolean showStandLine = true;
         /*标准线*/
-        private ValueEntity standValueEntity;
+        private ValueEntity standValueEntity = new ValueEntity();
         /*y轴取最大值最小值时的缩放比例(取10，100，100)，默认取整，即不缩放*/
         private float scaleRate = 1;
+        /*上面那条标准线颜色*/
+        private int standLineLowColor = Color.rgb(78, 193, 242);
+        /*下面那条标准线颜色*/
+        private int standLineHighColor = Color.rgb(78, 193, 242);
 
         /*滑动模式*/
         private MoveType mMoveType = MoveType.TYPE_LINE;
@@ -1159,7 +1165,7 @@ public class ChartView extends View
             paint.setStrokeWidth(0);
             paint.setTextSize(DEFAULT_FONT_SIZE);
             float fontHeight = ChartUtils.calculateFontHeight(paint);
-            fontWidthY = ChartUtils.calculateFontWidth(paint, valueEntity.max + "");
+            fontWidthY = Math.max(ChartUtils.calculateFontWidth(paint, valueEntity.max + ""), ChartUtils.calculateFontWidth(paint, unitYText));
             if (xUnitType == UnitType.TYPE_DATE)
             {
                 fontWidthX = ChartUtils.calculateFontWidth(paint, "00:00:00");
@@ -1318,6 +1324,18 @@ public class ChartView extends View
         public ChartConfigBuilder setYScaleRate(float scaleRate)
         {
             mChartConfig.scaleRate = scaleRate;
+            return this;
+        }
+
+        public ChartConfigBuilder setHighStandLineColor(int color)
+        {
+            mChartConfig.standLineHighColor = color;
+            return this;
+        }
+
+        public ChartConfigBuilder setLowStandLineColor(int color)
+        {
+            mChartConfig.standLineLowColor = color;
             return this;
         }
 
