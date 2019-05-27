@@ -18,6 +18,7 @@ import android.view.View;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -568,7 +569,7 @@ public class ChartView extends View
         float unitY = (mValueEntity.max - mValueEntity.min) / (mChartConfig.countY - 1);
         for (int i = 0; i < mChartConfig.countY; i++)
         {
-            String stringY = String.format("%.1f", startY + i * unitY);
+            String stringY = String.format(mChartConfig.unitYFormat, startY + i * unitY);
             canvas.drawText(stringY, -ChartConfig.FONT_PADDING, (float) (mChartConfig.chartHeight * (1 - i / (mChartConfig.countY - 1.0))), paint);
         }
 
@@ -670,9 +671,38 @@ public class ChartView extends View
     {
         canvas.saveLayer(0, -ChartConfig.DEFAULT_PADDING - mChartConfig.chartHeight - mChartConfig.fontHeightX,
                 mChartConfig.chartWidth, mChartConfig.fontHeightX + ChartConfig.DEFAULT_PADDING, null, Canvas.ALL_SAVE_FLAG);
+        List<List<ChartItem>> listList = new ArrayList<>();
+        /*对数据进行排序，type越大越最后画*/
         for (Integer integer : drawingListMap.keySet())
         {
-            List<ChartItem> currentDrawingItems = drawingListMap.get(integer);
+            listList.add(drawingListMap.get(integer));
+        }
+        Collections.sort(listList, new Comparator<List<ChartItem>>()
+        {
+            @Override
+            public int compare(List<ChartItem> o1, List<ChartItem> o2)
+            {
+                if (o1.isEmpty() && o2.isEmpty())
+                {
+                    return 0;
+                }
+                else if (o1.isEmpty())
+                {
+                    return -1;
+                }
+                else if (o2.isEmpty())
+                {
+                    return 1;
+                }
+                else
+                {
+                    return o1.get(0).getType() - o2.get(0).getType();
+                }
+            }
+        });
+
+        for (List<ChartItem> currentDrawingItems : listList)
+        {
             //画X轴单位及点
             if (currentDrawingItems == null || currentDrawingItems.isEmpty())
             {
@@ -818,6 +848,10 @@ public class ChartView extends View
         if (xShowCount == 1)
         {
             ChartItem current = getChartItemsByIndex(0).get(0);
+            if (current.getValueX() == null)
+            {
+                return;
+            }
             //画日期
             if (mChartConfig.xUnitType == UnitType.TYPE_NUM)
             {
@@ -838,24 +872,37 @@ public class ChartView extends View
             {
                 return;
             }
-            ChartItem current = getChartItemsByIndex(i).get(0);
-            if (current == null)
-            {
-                return;
-            }
+            //ChartItem current = getChartItemsByIndex(i).get(0);
+            String xDate = getXDate(getChartItemsByIndex(i));
             //画日期
             if (mChartConfig.xUnitType == UnitType.TYPE_NUM)
             {
-                canvas.drawText(current.getValueX(), startX + (i - mChartConfig.startIndex) * unitX, mChartConfig.fontHeightX, paint);
+                canvas.drawText(xDate, startX + (i - mChartConfig.startIndex) * unitX, mChartConfig.fontHeightX, paint);
             }
             else
             {
-                canvas.drawText(ChartUtils.getDateDay(current.getValueX()), startX + (i - mChartConfig.startIndex) * unitX, mChartConfig.fontHeightX / 2, paint);
-                canvas.drawText(ChartUtils.getDateHour(current.getValueX()), startX + (i - mChartConfig.startIndex) * unitX, mChartConfig.fontHeightX, paint);
+                canvas.drawText(ChartUtils.getDateDay(xDate), startX + (i - mChartConfig.startIndex) * unitX, mChartConfig.fontHeightX / 2, paint);
+                canvas.drawText(ChartUtils.getDateHour(xDate), startX + (i - mChartConfig.startIndex) * unitX, mChartConfig.fontHeightX, paint);
             }
         }
         canvas.restore();
 
+    }
+
+    private String getXDate( List<ChartItem> chartItemList)
+    {
+        if (chartItemList == null || chartItemList.isEmpty())
+        {
+            return "";
+        }
+        for (ChartItem item : chartItemList)
+        {
+            if (!TextUtils.isEmpty(item.getValueX()))
+            {
+                return item.getValueX();
+            }
+        }
+        return "";
     }
 
     private List<ChartItem> getChartItemsByIndex(int index)
@@ -1098,6 +1145,8 @@ public class ChartView extends View
         private ValueEntity standValueEntity = new ValueEntity();
         /*y轴取最大值最小值时的缩放比例(取10，100，100)，默认取整，即不缩放*/
         private float scaleRate = 1;
+        /*Y轴上显示的数值的格式*/
+        private String unitYFormat = ChartItem.UNIT_Y_FORMAT_FLOAT_1;
         /*上面那条标准线颜色*/
         private int standLineLowColor = Color.rgb(78, 193, 242);
         /*下面那条标准线颜色*/
@@ -1336,6 +1385,12 @@ public class ChartView extends View
         public ChartConfigBuilder setLowStandLineColor(int color)
         {
             mChartConfig.standLineLowColor = color;
+            return this;
+        }
+
+        public ChartConfigBuilder setUnitYFormat(String format)
+        {
+            mChartConfig.unitYFormat = format;
             return this;
         }
 

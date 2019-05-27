@@ -10,12 +10,18 @@ public class ChartItem implements Comparable<ChartItem>
 {
     /*源数据，在有多条先的情况下以那条线为准,如果所画的线中有此种类型的线，
     * 则此线范围外的点点击无效*/
-    public static final int LINE_SOURCE = 0;
+    public static final int LINE_SOURCE = Integer.MAX_VALUE;
 
     public static final int LINE_1 = 1;
     public static final int LINE_2 = 2;
     public static final int LINE_3 = 3;
     public static final int LINE_4 = 4;
+
+    /*取整*/
+    public static final String UNIT_Y_FORMAT_INT = "%.0f";
+    /*取一位小数*/
+    public static final String UNIT_Y_FORMAT_FLOAT_1 = "%.1f";
+
     private float valueY;
     private String valueX;
     private int type;
