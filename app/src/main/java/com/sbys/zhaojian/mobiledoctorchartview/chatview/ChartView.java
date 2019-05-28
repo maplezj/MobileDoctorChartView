@@ -18,11 +18,11 @@ import android.view.View;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 
 
 /**
@@ -449,7 +449,7 @@ public class ChartView extends View
                     }
                     //int drawingIndx = getDrawingVerticalIndex(event.getX());
                     Log.d(TAG, "onTouchEvent: click point--------------->" + index);
-                    if (onClickPointListener != null)
+                    if (onClickPointListener != null && index >= 0)
                     {
                         onClickPointListener.onClick(getChartItemsByIndex(index));
                     }
@@ -465,7 +465,19 @@ public class ChartView extends View
 
     private int getVerticalIndex(float x)
     {
-        return (int) ((mChartConfig.xDistance + x - mChartConfig.startX) / mChartConfig.unitXDistance + 0.5);
+        int index = (int) ((mChartConfig.xDistance + x - mChartConfig.startX) / mChartConfig.unitXDistance + 0.5);
+        if (mChartItemListMap.containsKey(ChartItem.LINE_SOURCE))
+        {
+            List<ChartItem> chartItemList = mChartItemListMap.get(ChartItem.LINE_SOURCE);
+            if (chartItemList.size() - 1 >= index)
+            {
+                if (chartItemList.get(index) instanceof EmptyChartItem)
+                {
+                    return -1;
+                }
+            }
+        }
+        return index;
     }
 
     private void scrollLine(float distanceX)
@@ -619,7 +631,7 @@ public class ChartView extends View
 
     private void createDrawingPoint()
     {
-        pointListMap = new HashMap<>();
+        pointListMap = new TreeMap<>();
         for (Integer integer : drawingListMap.keySet())
         {
             List<ChartItem> chartItems = drawingListMap.get(integer);
@@ -671,38 +683,10 @@ public class ChartView extends View
     {
         canvas.saveLayer(0, -ChartConfig.DEFAULT_PADDING - mChartConfig.chartHeight - mChartConfig.fontHeightX,
                 mChartConfig.chartWidth, mChartConfig.fontHeightX + ChartConfig.DEFAULT_PADDING, null, Canvas.ALL_SAVE_FLAG);
-        List<List<ChartItem>> listList = new ArrayList<>();
-        /*对数据进行排序，type越大越最后画*/
+
         for (Integer integer : drawingListMap.keySet())
         {
-            listList.add(drawingListMap.get(integer));
-        }
-        Collections.sort(listList, new Comparator<List<ChartItem>>()
-        {
-            @Override
-            public int compare(List<ChartItem> o1, List<ChartItem> o2)
-            {
-                if (o1.isEmpty() && o2.isEmpty())
-                {
-                    return 0;
-                }
-                else if (o1.isEmpty())
-                {
-                    return -1;
-                }
-                else if (o2.isEmpty())
-                {
-                    return 1;
-                }
-                else
-                {
-                    return o1.get(0).getType() - o2.get(0).getType();
-                }
-            }
-        });
-
-        for (List<ChartItem> currentDrawingItems : listList)
-        {
+            List<ChartItem> currentDrawingItems = drawingListMap.get(integer);
             //画X轴单位及点
             if (currentDrawingItems == null || currentDrawingItems.isEmpty())
             {
