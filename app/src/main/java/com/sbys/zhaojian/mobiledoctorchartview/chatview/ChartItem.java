@@ -16,6 +16,8 @@ public class ChartItem implements Comparable<ChartItem>
     public static final int LINE_2 = 2;
     public static final int LINE_3 = 3;
     public static final int LINE_4 = 4;
+    public static final int LINE_5 = 5;
+    public static final int LINE_6 = 6;
 
     /*取整*/
     public static final String UNIT_Y_FORMAT_INT = "%.0f";

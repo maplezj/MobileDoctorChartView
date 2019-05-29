@@ -533,7 +533,8 @@ public class ChartView extends View
         int result = 0;
         for (Integer integer : mChartItemListMap.keySet())
         {
-            int tem = mChartItemListMap.get(integer).get(mChartItemListMap.get(integer).size() - 1).getIndex();
+            List<ChartItem> chartItemList = mChartItemListMap.get(integer);
+            int tem = chartItemList.isEmpty() ? 0 : chartItemList.get(chartItemList.size() - 1).getIndex();
             if (tem > result)
             {
                 result = tem;
@@ -856,6 +857,12 @@ public class ChartView extends View
             {
                 return;
             }
+
+            if (!drawXUnit(i))
+            {
+                continue;
+            }
+
             //ChartItem current = getChartItemsByIndex(i).get(0);
             String xDate = getXDate(getChartItemsByIndex(i));
             //画日期
@@ -871,6 +878,15 @@ public class ChartView extends View
         }
         canvas.restore();
 
+    }
+
+    private boolean drawXUnit(int index)
+    {
+        if (index == 0 || index == getMaxIndex())
+        {
+            return true;
+        }
+        return index % mChartConfig.perCountX == 0;
     }
 
     private String getXDate( List<ChartItem> chartItemList)
@@ -1119,6 +1135,7 @@ public class ChartView extends View
         int countX = DEFAULT_X_COUNT;
         /*y轴刻度数量*/
         int countY = DEFAULT_Y_COUNT;
+        int perCountX = 1;
         /*X轴上的单位类型*/
         private UnitType xUnitType = UnitType.TYPE_DATE;
         /*支持竖线提示*/
@@ -1278,7 +1295,15 @@ public class ChartView extends View
             return this;
         }
 
-        /*设置X轴的刻度数量*/
+        /*设置X轴上每多少个点画一个刻度（用于数据量过多导致x轴刻度重叠时，设置此参数，从而隔几个刻度画一次）*/
+        public ChartConfigBuilder setPerCountX(int count)
+        {
+            mChartConfig.perCountX = count;
+            return this;
+        }
+
+
+        /*设置X轴的刻度数量（实际展示的数量）*/
         public ChartConfigBuilder setCountX(int countX)
         {
             mChartConfig.countX = countX;
