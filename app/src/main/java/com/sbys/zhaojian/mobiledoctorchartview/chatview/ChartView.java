@@ -466,6 +466,10 @@ public class ChartView extends View
     private int getVerticalIndex(float x)
     {
         int index = (int) ((mChartConfig.xDistance + x - mChartConfig.startX) / mChartConfig.unitXDistance + 0.5);
+        if (index < 0)
+        {
+            return -1;
+        }
         if (mChartItemListMap.containsKey(ChartItem.LINE_SOURCE))
         {
             List<ChartItem> chartItemList = mChartItemListMap.get(ChartItem.LINE_SOURCE);
@@ -638,7 +642,7 @@ public class ChartView extends View
             List<ChartItem> chartItems = drawingListMap.get(integer);
             if (chartItems == null || chartItems.isEmpty())
             {
-                return;
+                continue;
             }
             for (int i = 0; i < chartItems.size(); i++)
             {
@@ -685,14 +689,14 @@ public class ChartView extends View
         canvas.saveLayer(0, -ChartConfig.DEFAULT_PADDING - mChartConfig.chartHeight - mChartConfig.fontHeightX,
                 mChartConfig.chartWidth, mChartConfig.fontHeightX + ChartConfig.DEFAULT_PADDING, null, Canvas.ALL_SAVE_FLAG);
 
-        for (Integer integer : drawingListMap.keySet())
-        {
-            List<ChartItem> currentDrawingItems = drawingListMap.get(integer);
+        //for (Integer integer : drawingListMap.keySet())
+        //{
+           /* List<ChartItem> currentDrawingItems = drawingListMap.get(integer);
             //画X轴单位及点
             if (currentDrawingItems == null || currentDrawingItems.isEmpty())
             {
-                return;
-            }
+                continue;
+            }*/
 
             paint.setStyle(Paint.Style.STROKE);
             paint.setStrokeWidth(5);
@@ -715,7 +719,7 @@ public class ChartView extends View
                 }
             }
 
-        }
+        //}
         canvas.restore();
         paint.setColor(Color.WHITE);
     }
@@ -729,9 +733,12 @@ public class ChartView extends View
         for (int i = 0; currentDrawingItems.size() > i; i++)
         {
             Point current = currentDrawingItems.get(i);
-            scale = scalePoint(current.index) ? 1.5f : 1f;
-            float x = xShowCount == 1 ? mChartConfig.chartWidth / 2 : current.x;
-            drawPointDetail(canvas, x, current.y, scale, current.type, current.index);
+            if (mChartConfig.drawNormalLinePoint || current.getType() == ChartItem.LINE_SOURCE)
+            {
+                scale = scalePoint(current.index) ? 1.5f : 1f;
+                float x = xShowCount == 1 ? mChartConfig.chartWidth / 2 : current.x;
+                drawPointDetail(canvas, x, current.y, scale, current.type, current.index);
+            }
         }
         paint.setColor(Color.BLACK);
     }
@@ -1142,6 +1149,8 @@ public class ChartView extends View
         private boolean supportVerticalLine = false;
         /*是否显示标准线*/
         private boolean showStandLine = true;
+        /*普通的数据点（ChartItem.type != ChartItem.LINE_SOURCE）是否要画圈圈*/
+        private boolean drawNormalLinePoint = true;
         /*标准线*/
         private ValueEntity standValueEntity = new ValueEntity();
         /*y轴取最大值最小值时的缩放比例(取10，100，100)，默认取整，即不缩放*/
@@ -1400,6 +1409,12 @@ public class ChartView extends View
         public ChartConfigBuilder setUnitYFormat(String format)
         {
             mChartConfig.unitYFormat = format;
+            return this;
+        }
+
+        public ChartConfigBuilder drawNormalLinePoint(boolean drawNormalLinePoint)
+        {
+            mChartConfig.drawNormalLinePoint = drawNormalLinePoint;
             return this;
         }
 

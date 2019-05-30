@@ -13,6 +13,7 @@ import android.support.annotation.Nullable;
 import android.text.Layout;
 import android.text.StaticLayout;
 import android.text.TextPaint;
+import android.text.TextUtils;
 
 import java.util.List;
 
@@ -86,6 +87,10 @@ public abstract class ChartDetailDrawable extends Drawable
 
     private void drawText(Canvas canvas)
     {
+        if (TextUtils.isEmpty(createContent()))
+        {
+            return;
+        }
         TextPaint paint = new TextPaint();
         paint.setTextAlign(Paint.Align.LEFT);
         paint.setTextSize(34);
