@@ -466,6 +466,7 @@ public class ChartView extends View
     private int getVerticalIndex(float x)
     {
         int index = (int) ((mChartConfig.xDistance + x - mChartConfig.startX) / mChartConfig.unitXDistance + 0.5);
+        boolean left = ((mChartConfig.xDistance + x - mChartConfig.startX) % mChartConfig.unitXDistance) / mChartConfig.unitXDistance > 0.5;
         if (index < 0)
         {
             return -1;
@@ -473,15 +474,61 @@ public class ChartView extends View
         if (mChartItemListMap.containsKey(ChartItem.LINE_SOURCE))
         {
             List<ChartItem> chartItemList = mChartItemListMap.get(ChartItem.LINE_SOURCE);
-            if (chartItemList.size() - 1 >= index)
+            return realVerticalIndex(chartItemList, index, left);
+            /*if (chartItemList.size() - 1 >= index)
             {
                 if (chartItemList.get(index) instanceof EmptyChartItem)
                 {
                     return -1;
                 }
-            }
+            }*/
         }
         return index;
+    }
+
+    /*获取真正的index（用于过滤掉空数据）*/
+    private int realVerticalIndex(List<ChartItem> chartItemList, int index, boolean left)
+    {
+        if (index >= chartItemList.size())
+        {
+            return -1;
+        }
+        if (!(chartItemList.get(index) instanceof EmptyChartItem))
+        {
+            return index;
+        }
+        int leftIndex = index;
+        int rightIndex = index;
+        while (leftIndex >= 0 || rightIndex < chartItemList.size())
+        {
+            if (left)
+            {
+                leftIndex--;
+                left = false;
+                if (leftIndex >= 0)
+                {
+                    ChartItem item = chartItemList.get(leftIndex);
+                    if (!(item instanceof EmptyChartItem))
+                    {
+                        return leftIndex;
+                    }
+                }
+            }
+            else
+            {
+                rightIndex++;
+                left = true;
+                if (rightIndex < chartItemList.size())
+                {
+                    ChartItem item = chartItemList.get(rightIndex);
+                    if (!(item instanceof EmptyChartItem))
+                    {
+                        return rightIndex;
+                    }
+                }
+            }
+        }
+        return -1;
     }
 
     private void scrollLine(float distanceX)
