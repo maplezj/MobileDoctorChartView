@@ -278,7 +278,7 @@ public class ChartView extends View
             return;
         }
 
-        if (transferMap.keySet().size() == 1)
+        if (xShowCount == 1)
         {
             int index = transferMap.keySet().iterator().next();
             List<Point> pointList = transferMap.get(index);
@@ -286,7 +286,7 @@ public class ChartView extends View
             for (Point point : pointList)
             {
                 Point pointCopy = (Point) point.clone();
-                pointCopy.x = mChartConfig.chartWidth/2;
+                pointCopy.x = mChartConfig.chartWidth / 2;
                 copy.add(pointCopy);
             }
             if (drawVerticalLine(index))
