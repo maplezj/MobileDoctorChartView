@@ -77,8 +77,30 @@ public class ChartView extends View
         }
     }
 
+    private void fillEmptyOnce(boolean start)
+    {
+        for (Integer integer : mChartConfig.sourceChartItemListMap.keySet())
+        {
+            if (start)
+            {
+                mChartConfig.sourceChartItemListMap.get(integer).add(0, new EmptyChartItem(""));
+            }
+            else
+            {
+                mChartConfig.sourceChartItemListMap.get(integer).add(new EmptyChartItem(""));
+            }
+        }
+    }
+
     private void parseData(Map<Integer, List<ChartItem>> chartItemListMap)
     {
+        boolean start = false;
+        while (!mChartConfig.showFullScreen && getMaxSize() < mChartConfig.countX)
+        {
+            fillEmptyOnce(start);
+            start = !start;
+        }
+
         int maxSize = 0;
         for (Integer integer : chartItemListMap.keySet())
         {
@@ -131,7 +153,14 @@ public class ChartView extends View
                 }
             }
         }
-        xShowCount = maxSize < mChartConfig.countX ? maxSize : mChartConfig.countX;
+        if (mChartConfig.showFullScreen)
+        {
+            xShowCount = maxSize < mChartConfig.countX ? maxSize : mChartConfig.countX;
+        }
+        else
+        {
+            xShowCount = mChartConfig.countX;
+        }
         mChartConfig.endIndex = getMaxSize() - 1;
         mChartConfig.startIndex = mChartConfig.endIndex - xShowCount+1;
         parseShowData();
@@ -1198,6 +1227,7 @@ public class ChartView extends View
         private boolean showStandLine = true;
         /*普通的数据点（ChartItem.type != ChartItem.LINE_SOURCE）是否要画圈圈*/
         private boolean drawNormalLinePoint = true;
+        private boolean showFullScreen = true;
         /*标准线*/
         private ValueEntity standValueEntity = new ValueEntity();
         /*y轴取最大值最小值时的缩放比例(取10，100，100)，默认取整，即不缩放*/
@@ -1462,6 +1492,13 @@ public class ChartView extends View
         public ChartConfigBuilder drawNormalLinePoint(boolean drawNormalLinePoint)
         {
             mChartConfig.drawNormalLinePoint = drawNormalLinePoint;
+            return this;
+        }
+
+        /*在数据少于设定的数量时是居中显示还是整个宽度显示*/
+        public ChartConfigBuilder showFullScreen(boolean showFullScreen)
+        {
+            mChartConfig.showFullScreen = showFullScreen;
             return this;
         }
 
