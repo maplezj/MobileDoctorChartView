@@ -25,19 +25,29 @@ public class MainActivity extends Activity
         ChartView chartView = findViewById(R.id.chatView);
         //chartView.setEmpty(ChartView.CHART_TYPE_HEART);
         chartView.setConfig(new ChartView.ChartConfigBuilder()
-                .setCountX(5)
+                .setUnitYFormat(ChartItem.UNIT_Y_FORMAT_INT)
+                .setCountX(10)
                 .setCountY(4)
+                //.setPerCountX(11)
                 .setUnitY("(cm)")
                 .setUnitX("(周)")
-                .setUnitXType(ChartView.UnitType.TYPE_DATE)
+                .drawNormalLinePoint(false)
+                .setUnitXType(ChartView.UnitType.TYPE_NUM)
                 .setMoveType(ChartView.MoveType.TYPE_VERTIAL_LINE)
-                .addLine(drawSingle(), ChartItem.LINE_1)
-                .addLine(line1(), ChartItem.LINE_SOURCE)
+                .addLine(drawSingle(), ChartItem.LINE_SOURCE)
+                //.addLine(line1(), ChartItem.LINE_1)
+                //.addLine(line2(), ChartItem.LINE_2)
+                //.addLine(line3(), ChartItem.LINE_3)
+                .setColor(ChartItem.LINE_1,getResources().getColor(R.color.colorAccent))
                 .setColor(ChartItem.LINE_2, Color.rgb(86, 189, 114))
                 //.addMultTypeLine(drawDoubleSpecial())
                 .showVertialLine(true)
-                .setStandLineValue(new ChartView.ValueEntity(150, 50, 139, 89))
+                .showFullScreen(false)
+                //.setStandLineValue(new ChartView.ValueEntity(150, 50, 139, 89))
+                .showStandLine(false)
                 .setDetailDrawable(new HypertensionDrawable(this))
+                .setHighStandLineColor(R.color.colorAccent)
+                .setLowStandLineColor(R.color.colorPrimary)
                 .build());
 
         chartView.setOnClickPointListener(new ChartView.OnClickPointListener()
@@ -61,16 +71,18 @@ public class MainActivity extends Activity
     {
         ArrayList<ChartItem> chartItems = new ArrayList<>();
 
-        chartItems.add(new ChartItem(100, "2019"));
-        chartItems.add(new ChartItem(80, "2"));
-        chartItems.add(new ChartItem(50, "3"));
-        chartItems.add(new ChartItem(60, "4"));
-        chartItems.add(new ChartItem(80, "5"));
-        chartItems.add(new ChartItem(50, "6"));
-        chartItems.add(new ChartItem(110, "7"));
-        chartItems.add(new ChartItem(40, "8"));
-        chartItems.add(new ChartItem(120, "9"));
-        chartItems.add(new ChartItem(70, "10"));
+        chartItems.add(new ChartItem(1.5f, "1"));
+        //chartItems.add(new ChartItem(80, "2"));
+        //chartItems.add(new ChartItem(50, "3"));
+        //chartItems.add(new ChartItem(60, "4"));
+        //chartItems.add(new EmptyChartItem("4"));
+        //chartItems.add(new EmptyChartItem("5"));
+        //chartItems.add(new ChartItem(10, "6"));
+        //chartItems.add(new ChartItem(50, "7"));
+        //chartItems.add(new ChartItem(110, "7"));
+        //chartItems.add(new ChartItem(40, "8"));
+        //chartItems.add(new ChartItem(120, "9"));
+        //chartItems.add(new ChartItem(70, "10"));
 
         //chartView.setData(chartItems, ChartView.CHART_TYPE_HEART);
         return chartItems;
@@ -81,20 +93,54 @@ public class MainActivity extends Activity
         ArrayList<ChartItem> chartItems = new ArrayList<>();
 
         //chartItems.add(new ChartItem(30, "1"));
-        chartItems.add(new ChartItem(30,"5"));
+        chartItems.add(new ChartItem(30,"1"));
         chartItems.add(new ChartItem(35, "2"));
         chartItems.add(new ChartItem(40, "3"));
         chartItems.add(new ChartItem(45, "4"));
-        //chartItems.add(new ChartItem(50, "5"));
+        chartItems.add(new ChartItem(50, "5"));
         chartItems.add(new ChartItem(55, "6"));
         chartItems.add(new ChartItem(60, "7"));
         chartItems.add(new ChartItem(65, "8"));
-        chartItems.add(new EmptyChartItem("5"));
         chartItems.add(new ChartItem(70, "9"));
+        chartItems.add(new ChartItem(90, "10"));
         //chartItems.add(new ChartItem(80, "10"));
         //chartItems.add(new EmptyChartItem("11"));
 
         //chartView.setData(chartItems, ChartView.CHART_TYPE_HEART);
+        return chartItems;
+    }
+
+    private List<ChartItem> line2()
+    {
+        ArrayList<ChartItem> chartItems = new ArrayList<>();
+
+        chartItems.add(new ChartItem(40,"1"));
+        chartItems.add(new ChartItem(45, "2"));
+        chartItems.add(new ChartItem(50, "3"));
+        chartItems.add(new ChartItem(55, "4"));
+        chartItems.add(new ChartItem(60, "5"));
+        chartItems.add(new ChartItem(65, "6"));
+        chartItems.add(new ChartItem(70, "7"));
+        chartItems.add(new ChartItem(75, "8"));
+        chartItems.add(new ChartItem(80, "9"));
+        chartItems.add(new ChartItem(100, "10"));
+        return chartItems;
+    }
+
+    private List<ChartItem> line3()
+    {
+        ArrayList<ChartItem> chartItems = new ArrayList<>();
+
+        chartItems.add(new ChartItem(50,"1"));
+        chartItems.add(new ChartItem(55, "2"));
+        chartItems.add(new ChartItem(60, "3"));
+        chartItems.add(new ChartItem(65, "4"));
+        chartItems.add(new ChartItem(70, "5"));
+        chartItems.add(new ChartItem(75, "6"));
+        chartItems.add(new ChartItem(80, "7"));
+        chartItems.add(new ChartItem(85, "8"));
+        chartItems.add(new ChartItem(90, "9"));
+        chartItems.add(new ChartItem(110, "10"));
         return chartItems;
     }
 

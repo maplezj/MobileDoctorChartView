@@ -646,12 +646,23 @@ public class ChartView extends View
         return mChartConfig.startIndex == 0 && mChartConfig.xDistance <= 0;
     }
 
+    private void calculateRealYCount()
+    {
+        if ((mChartConfig.unitYFormat.equals(ChartItem.UNIT_Y_FORMAT_INT)))
+        {
+            if (mValueEntity.max - mValueEntity.min < mChartConfig.countY)
+            {
+                mChartConfig.countY = (int) (mValueEntity.max - mValueEntity.min) + 1;
+            }
+        }
+    }
 
     /**
      * 画单位
      */
     private void drawYUnit(Canvas canvas)
     {
+        calculateRealYCount();
         paint.setFakeBoldText(false);
         paint.setTextSize(ChartConfig.DEFAULT_FONT_SIZE);
         paint.setStrokeWidth(0);
