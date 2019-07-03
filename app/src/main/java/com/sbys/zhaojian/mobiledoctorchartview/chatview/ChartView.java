@@ -130,7 +130,7 @@ public class ChartView extends View
             }
             else
             {
-                if (integer == ChartItem.LINE_SOURCE)
+                if (integer == ChartItem.LINE_SOURCE && !mChartConfig.standardLineCanPoint)
                 {
                     mChartConfig.sourceEndIndex = chartItemListMap.get(integer).size() - 1;
                 }
@@ -500,7 +500,7 @@ public class ChartView extends View
         {
             return -1;
         }
-        if (mChartItemListMap.containsKey(ChartItem.LINE_SOURCE))
+        if (mChartItemListMap.containsKey(ChartItem.LINE_SOURCE) && !mChartConfig.standardLineCanPoint)
         {
             List<ChartItem> chartItemList = mChartItemListMap.get(ChartItem.LINE_SOURCE);
             return realVerticalIndex(chartItemList, index, left);
@@ -1239,6 +1239,7 @@ public class ChartView extends View
         /*普通的数据点（ChartItem.type != ChartItem.LINE_SOURCE）是否要画圈圈*/
         private boolean drawNormalLinePoint = true;
         private boolean showFullScreen = true;
+        private boolean standardLineCanPoint = false;
         /*标准线*/
         private ValueEntity standValueEntity = new ValueEntity();
         /*y轴取最大值最小值时的缩放比例(取10，100，100)，默认取整，即不缩放*/
@@ -1510,6 +1511,13 @@ public class ChartView extends View
         public ChartConfigBuilder showFullScreen(boolean showFullScreen)
         {
             mChartConfig.showFullScreen = showFullScreen;
+            return this;
+        }
+
+        /*曲线标准线是否可以定位到（孕产妇、婴幼儿等的标准线是一组曲线，此时是否支持定位到此标准线的每个点）*/
+        public ChartConfigBuilder standardLineCanPoint(boolean standardLineCanPoint)
+        {
+            mChartConfig.standardLineCanPoint = standardLineCanPoint;
             return this;
         }
 

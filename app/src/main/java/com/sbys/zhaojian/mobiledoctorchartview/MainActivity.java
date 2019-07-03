@@ -35,7 +35,7 @@ public class MainActivity extends Activity
                 .setUnitXType(ChartView.UnitType.TYPE_NUM)
                 .setMoveType(ChartView.MoveType.TYPE_VERTIAL_LINE)
                 .addLine(drawSingle(), ChartItem.LINE_SOURCE)
-                //.addLine(line1(), ChartItem.LINE_1)
+                .addLine(line1(), ChartItem.LINE_1)
                 //.addLine(line2(), ChartItem.LINE_2)
                 //.addLine(line3(), ChartItem.LINE_3)
                 .setColor(ChartItem.LINE_1,getResources().getColor(R.color.colorAccent))
@@ -48,6 +48,7 @@ public class MainActivity extends Activity
                 .setDetailDrawable(new HypertensionDrawable(this))
                 .setHighStandLineColor(R.color.colorAccent)
                 .setLowStandLineColor(R.color.colorPrimary)
+                .standardLineCanPoint(true)
                 .build());
 
         chartView.setOnClickPointListener(new ChartView.OnClickPointListener()
@@ -71,9 +72,9 @@ public class MainActivity extends Activity
     {
         ArrayList<ChartItem> chartItems = new ArrayList<>();
 
-        chartItems.add(new ChartItem(1.5f, "1"));
-        //chartItems.add(new ChartItem(80, "2"));
-        //chartItems.add(new ChartItem(50, "3"));
+        chartItems.add(new ChartItem(40, "1"));
+        chartItems.add(new ChartItem(80, "2"));
+        chartItems.add(new ChartItem(50, "3"));
         //chartItems.add(new ChartItem(60, "4"));
         //chartItems.add(new EmptyChartItem("4"));
         //chartItems.add(new EmptyChartItem("5"));
