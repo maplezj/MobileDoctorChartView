@@ -6,7 +6,7 @@ ext {
     // 在用到的代码上依赖的代码compile 'com.andrjhf.storage:encrypt:1.0.0'
     PUBLISH_GROUP_ID = 'com.github.chart'
     PUBLISH_ARTIFACT_ID = 'MDChartView'
-    PUBLISH_VERSION = '1.1.4'
+    PUBLISH_VERSION = '1.1.5'
 }
 
 uploadArchives {
