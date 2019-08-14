@@ -712,7 +712,7 @@ public class ChartView extends View
         paint.setColor(WRAPPER_LINE);
         paint.setFakeBoldText(false);
         paint.setStyle(Paint.Style.STROKE);
-        paint.setStrokeWidth(3);
+        paint.setStrokeWidth(1);
         canvas.translate(mChartConfig.startX, mChartConfig.startY);
         Path path = new Path();
         path.moveTo(0, 0);
