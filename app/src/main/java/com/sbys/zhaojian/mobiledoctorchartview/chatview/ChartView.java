@@ -664,7 +664,8 @@ public class ChartView extends View
     {
         calculateRealYCount();
         paint.setFakeBoldText(false);
-        paint.setTextSize(ChartConfig.DEFAULT_FONT_SIZE);
+        paint.setAntiAlias(true);
+        paint.setTextSize(ChartUtils.dpToPx(getContext(), ChartConfig.DEFAULT_FONT_SIZE));
         paint.setStrokeWidth(0);
         paint.setTextAlign(Paint.Align.RIGHT);
         paint.setColor(COLOR_TEXT);
@@ -1208,7 +1209,7 @@ public class ChartView extends View
         public static final int DEFAULT_Y_COUNT = 6;
 
         /*默认字体大小*/
-        private static final int DEFAULT_FONT_SIZE = 30;
+        private static final int DEFAULT_FONT_SIZE = 10;
         /*边距*/
         public static final int DEFAULT_PADDING = 20;
         /*文字间距*/
@@ -1311,7 +1312,7 @@ public class ChartView extends View
             Paint paint = new Paint();
             paint.setFakeBoldText(false);
             paint.setStrokeWidth(0);
-            paint.setTextSize(DEFAULT_FONT_SIZE);
+            paint.setTextSize(ChartUtils.dpToPx(chartView.getContext(), ChartConfig.DEFAULT_FONT_SIZE));
             float fontHeight = ChartUtils.calculateFontHeight(paint);
             fontWidthY = Math.max(ChartUtils.calculateFontWidth(paint, valueEntity.max + ""), ChartUtils.calculateFontWidth(paint, unitYText));
             if (xUnitType == UnitType.TYPE_DATE)
