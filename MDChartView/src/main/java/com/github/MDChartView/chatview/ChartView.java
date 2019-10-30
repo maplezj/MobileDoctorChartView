@@ -1,4 +1,4 @@
-package com.sbys.zhaojian.mobiledoctorchartview.chatview;
+package com.github.MDChartView.chatview;
 
 import android.annotation.SuppressLint;
 import android.content.Context;

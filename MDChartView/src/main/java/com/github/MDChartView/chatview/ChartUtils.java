@@ -1,4 +1,4 @@
-package com.sbys.zhaojian.mobiledoctorchartview.chatview;
+package com.github.MDChartView.chatview;
 
 import android.content.Context;
 import android.graphics.Paint;

@@ -5,10 +5,9 @@ import android.graphics.Color;
 import android.os.Bundle;
 import android.util.Log;
 
-import com.sbys.zhaojian.mobiledoctorchartview.chatview.ChartItem;
-import com.sbys.zhaojian.mobiledoctorchartview.chatview.ChartView;
-import com.sbys.zhaojian.mobiledoctorchartview.chatview.EmptyChartItem;
-import com.sbys.zhaojian.mobiledoctorchartview.chatview.HypertensionDrawable;
+import com.github.MDChartView.chatview.ChartItem;
+import com.github.MDChartView.chatview.ChartView;
+import com.github.MDChartView.chatview.HypertensionDrawable;
 
 import java.util.ArrayList;
 import java.util.List;

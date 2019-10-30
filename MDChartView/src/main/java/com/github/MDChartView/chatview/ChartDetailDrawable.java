@@ -1,4 +1,4 @@
-package com.sbys.zhaojian.mobiledoctorchartview.chatview;
+package com.github.MDChartView.chatview;
 
 import android.content.Context;
 import android.graphics.Canvas;
@@ -8,8 +8,6 @@ import android.graphics.Paint;
 import android.graphics.PixelFormat;
 import android.graphics.RectF;
 import android.graphics.drawable.Drawable;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 import android.text.Layout;
 import android.text.StaticLayout;
 import android.text.TextPaint;
@@ -40,7 +38,7 @@ public abstract class ChartDetailDrawable extends Drawable
     }
 
     @Override
-    public void draw(@NonNull Canvas canvas)
+    public void draw(Canvas canvas)
     {
         drawText(canvas);
     }
@@ -125,7 +123,7 @@ public abstract class ChartDetailDrawable extends Drawable
     }
 
     @Override
-    public void setColorFilter(@Nullable ColorFilter colorFilter)
+    public void setColorFilter(ColorFilter colorFilter)
     {
         mPaint.setColorFilter(colorFilter);
     }

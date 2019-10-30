@@ -1,6 +1,5 @@
-package com.sbys.zhaojian.mobiledoctorchartview.chatview;
+package com.github.MDChartView.chatview;
 
-import android.support.annotation.NonNull;
 
 /**
  * Created by zhaojian on 2018/4/26.
@@ -76,7 +75,7 @@ public class ChartItem implements Comparable<ChartItem>
     }
 
     @Override
-    public int compareTo(@NonNull ChartItem o)
+    public int compareTo(ChartItem o)
     {
         if (valueY > o.valueY)
         {

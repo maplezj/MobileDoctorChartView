@@ -3,6 +3,7 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/ChartView.iml" filepath="$PROJECT_DIR$/ChartView.iml" />
+      <module fileurl="file://$PROJECT_DIR$/MDChartView/MDChartView.iml" filepath="$PROJECT_DIR$/MDChartView/MDChartView.iml" />
       <module fileurl="file://$PROJECT_DIR$/MobileDoctorChartView.iml" filepath="$PROJECT_DIR$/MobileDoctorChartView.iml" />
       <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
     </modules>

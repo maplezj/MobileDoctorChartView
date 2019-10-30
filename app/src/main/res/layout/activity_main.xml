@@ -6,7 +6,7 @@
     android:layout_height="match_parent"
     tools:context="com.sbys.zhaojian.mobiledoctorchartview.MainActivity">
 
-    <com.sbys.zhaojian.mobiledoctorchartview.chatview.ChartView
+    <com.github.MDChartView.chatview.ChartView
         android:layout_width="match_parent"
         android:layout_height="200dp"
         android:id="@+id/chatView"
