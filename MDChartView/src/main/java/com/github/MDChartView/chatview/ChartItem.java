@@ -27,6 +27,7 @@ public class ChartItem implements Comparable<ChartItem>
     private String valueX;
     private int type;
     private int index;
+    private Object tag;
 
     public ChartItem(float valueY, String valueX)
     {
@@ -67,7 +68,15 @@ public class ChartItem implements Comparable<ChartItem>
         return index;
     }
 
+    public Object getTag()
+    {
+        return tag;
+    }
 
+    public void setTag(Object tag)
+    {
+        this.tag = tag;
+    }
 
     public void setIndex(int index)
     {
