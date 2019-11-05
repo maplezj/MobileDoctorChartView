@@ -242,45 +242,18 @@ public class ChartView extends View
 
     private void resetValueEntity()
     {
-        mValueEntity.normalLow = mChartConfig.standValueEntity.normalLow;
-        mValueEntity.normalHigh = mChartConfig.standValueEntity.normalHigh;
-        mValueEntity.min = mChartConfig.standValueEntity.min;
-        mValueEntity.max = mChartConfig.standValueEntity.max;
-        /*switch (mChartConfig.type)
+        if (mChartConfig.standLineMap.isEmpty())
         {
-            case CHART_TYPE_PRESSURE:
-                mValueEntity.max = 150;
-                mValueEntity.min = 50;
-                mValueEntity.normalHigh = 139;
-                mValueEntity.normalLow = 89;
-                break;
-            case CHART_TYPE_SUGAR:
-                mValueEntity.max = 9;
-                mValueEntity.min = 3;
-                mValueEntity.normalHigh = 7.8f;
-                mValueEntity.normalLow = 6.1f;
-                break;
-            case CHART_TYPE_TEMP:
-                mValueEntity.max = 37.5f;
-                mValueEntity.min = 35;
-                mValueEntity.normalHigh = 37;
-                mValueEntity.normalLow = 35.8f;
-                break;
-            case CHART_TYPE_HEART:
-                mValueEntity.max = 110;
-                mValueEntity.min = 50;
-                mValueEntity.normalHigh = 100;
-                mValueEntity.normalLow = 60;
-                break;
-            case CHART_TYPE_LUNG:
-                mValueEntity.max = 100;
-                mValueEntity.min = 60;
-                mValueEntity.normalHigh = 90;
-                mValueEntity.normalLow = 70;
-                break;
-            default:
-                break;
-        }*/
+            mValueEntity.min = mChartConfig.minY;
+            mValueEntity.max = mChartConfig.maxY;
+        }
+        else
+        {
+            mValueEntity.min = ((TreeMap<Float, Integer>) mChartConfig.standLineMap).firstKey() < mChartConfig.minY
+                    ? ((TreeMap<Float, Integer>) mChartConfig.standLineMap).firstKey() : mChartConfig.minY;
+            mValueEntity.max = ((TreeMap<Float, Integer>) mChartConfig.standLineMap).lastKey() > mChartConfig.maxY
+                    ? ((TreeMap<Float, Integer>) mChartConfig.standLineMap).lastKey() : mChartConfig.maxY;
+        }
     }
 
     @Override
@@ -686,7 +659,27 @@ public class ChartView extends View
         if (mChartConfig.showStandLine)
         {
             //画正常值基准线
-            paint.setColor(mChartConfig.standLineLowColor);
+            DashPathEffect dashPathEffect = new DashPathEffect(new float[]{12, 6, 12, 6}, 0);
+            paint.setPathEffect(dashPathEffect);
+
+            try
+            {
+                for (Float aFloat : mChartConfig.standLineMap.keySet())
+                {
+                    paint.setColor(mChartConfig.standLineMap.get(aFloat));
+                    float lowY = mChartConfig.chartHeight * (1 - ((aFloat - mValueEntity.min) / (mValueEntity.max - mValueEntity.min)));
+                    Path path1 = new Path();
+                    path1.moveTo(0, lowY);
+                    path1.lineTo(mChartConfig.chartWidth, lowY);
+                    canvas.drawPath(path1, paint);
+                }
+            }
+            catch (IllegalArgumentException e)
+            {
+                Log.d(TAG, "drawYUnit: 标准线颜色设置有误：" + e.getMessage());
+            }
+
+            /*paint.setColor(mChartConfig.standLineLowColor);
             DashPathEffect dashPathEffect = new DashPathEffect(new float[]{12, 6, 12, 6}, 0);
             paint.setPathEffect(dashPathEffect);
             float lowY = mChartConfig.chartHeight * (1 - ((mValueEntity.normalLow - mValueEntity.min) / (mValueEntity.max - mValueEntity.min)));
@@ -700,7 +693,7 @@ public class ChartView extends View
             Path path2 = new Path();
             path2.moveTo(0, heightY);
             path2.lineTo(mChartConfig.chartWidth, heightY);
-            canvas.drawPath(path2, paint);
+            canvas.drawPath(path2, paint);*/
         }
     }
 
@@ -1171,19 +1164,9 @@ public class ChartView extends View
     {
         float max;
         float min;
-        float normalHigh;
-        float normalLow;
 
         public ValueEntity()
         {
-        }
-
-        public ValueEntity(float max, float min, float normalHigh, float normalLow)
-        {
-            this.max = max;
-            this.min = min;
-            this.normalHigh = normalHigh;
-            this.normalLow = normalLow;
         }
     }
 
@@ -1215,6 +1198,9 @@ public class ChartView extends View
         /*文字间距*/
         public static final int FONT_PADDING = 20;
 
+        private static float DEFAULT_Y_MIN = 0;
+        private static float DEFAULT_Y_MAX = 100;
+
         /*是否已经初始化（只初始化一次）*/
         boolean isInit = false;
 
@@ -1241,16 +1227,10 @@ public class ChartView extends View
         private boolean drawNormalLinePoint = true;
         private boolean showFullScreen = true;
         private boolean standardLineCanPoint = false;
-        /*标准线*/
-        private ValueEntity standValueEntity = new ValueEntity();
         /*y轴取最大值最小值时的缩放比例(取10，100，100)，默认取整，即不缩放*/
         private float scaleRate = 1;
         /*Y轴上显示的数值的格式*/
         private String unitYFormat = ChartItem.UNIT_Y_FORMAT_FLOAT_1;
-        /*上面那条标准线颜色*/
-        private int standLineLowColor = Color.rgb(78, 193, 242);
-        /*下面那条标准线颜色*/
-        private int standLineHighColor = Color.rgb(78, 193, 242);
 
         /*滑动模式*/
         private MoveType mMoveType = MoveType.TYPE_LINE;
@@ -1263,7 +1243,10 @@ public class ChartView extends View
         private int sourceEndIndex = -1;
 
         private ChartDetailDrawable detailTextDrawable;
+        private Map<Float, Integer> standLineMap = new TreeMap<>();
 
+        private float minY = DEFAULT_Y_MIN;
+        private float maxY = DEFAULT_Y_MAX;
 
 
         /*总宽度*/
@@ -1442,6 +1425,13 @@ public class ChartView extends View
             return this;
         }
 
+        public ChartConfigBuilder addLine(List<ChartItem> chartItems, int type, int color)
+        {
+            mChartConfig.sourceChartItemListMap.put(type, chartItems);
+            mChartConfig.colorMap.put(type, color);
+            return this;
+        }
+
         public ChartConfigBuilder addMultTypeLine(List<ChartItem> chartItems)
         {
             mChartConfig.sourceChartItemListMap.put(LINE_TYPE_MULT, chartItems);
@@ -1472,27 +1462,29 @@ public class ChartView extends View
             return this;
         }
 
-        public ChartConfigBuilder setStandLineValue(ValueEntity standLineValue)
+        /*设置最小值*/
+        public ChartConfigBuilder setMinValue(float minValue)
+        {
+            mChartConfig.minY = minValue;
+            return this;
+        }
+
+        /*设置最大值*/
+        public ChartConfigBuilder setMaxValue(float maxValue)
+        {
+            mChartConfig.maxY = maxValue;
+            return this;
+        }
+
+/*        public ChartConfigBuilder setStandLineValue(ValueEntity standLineValue)
         {
             mChartConfig.standValueEntity = standLineValue;
             return this;
-        }
+        }*/
 
         public ChartConfigBuilder setYScaleRate(float scaleRate)
         {
             mChartConfig.scaleRate = scaleRate;
-            return this;
-        }
-
-        public ChartConfigBuilder setHighStandLineColor(int color)
-        {
-            mChartConfig.standLineHighColor = color;
-            return this;
-        }
-
-        public ChartConfigBuilder setLowStandLineColor(int color)
-        {
-            mChartConfig.standLineLowColor = color;
             return this;
         }
 
@@ -1519,6 +1511,13 @@ public class ChartView extends View
         public ChartConfigBuilder standardLineCanPoint(boolean standardLineCanPoint)
         {
             mChartConfig.standardLineCanPoint = standardLineCanPoint;
+            return this;
+        }
+
+        /*添加标准线*/
+        public ChartConfigBuilder addStandLine(Float value, Integer color)
+        {
+            mChartConfig.standLineMap.put(value, color);
             return this;
         }
 
