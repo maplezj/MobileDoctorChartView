@@ -7,7 +7,6 @@ import android.util.Log;
 
 import com.github.MDChartView.chatview.ChartItem;
 import com.github.MDChartView.chatview.ChartView;
-import com.github.MDChartView.chatview.HypertensionDrawable;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -39,7 +38,7 @@ public class MainActivity extends Activity
                 //.addLine(line3(), ChartItem.LINE_3)
                 //.setColor(ChartItem.LINE_1, getResources().getColor(R.color.colorAccent))
                 .setColor(ChartItem.LINE_2, Color.rgb(86, 189, 114))
-                //.addMultTypeLine(drawDoubleSpecial())
+                .addMultTypeLine(drawDoubleSpecial())
                 .showVertialLine(true)
                 .showFullScreen(false)
                 //.setStandLineValue(new ChartView.ValueEntity(150, 50, 139, 89))

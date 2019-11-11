@@ -572,7 +572,7 @@ public class ChartView extends View
         int result = 0;
         for (Integer integer : drawingListMap.keySet())
         {
-            int tem = drawingListMap.get(integer).get(drawingListMap.get(integer).size() - 1).getIndex();
+            int tem = drawingListMap.get(integer).isEmpty() ? -1 : drawingListMap.get(integer).get(drawingListMap.get(integer).size() - 1).getIndex();
             if (tem > result)
             {
                 result = tem;
@@ -1192,7 +1192,7 @@ public class ChartView extends View
         public static final int DEFAULT_Y_COUNT = 6;
 
         /*默认字体大小*/
-        private static final int DEFAULT_FONT_SIZE = 10;
+        static final int DEFAULT_FONT_SIZE = 10;
         /*边距*/
         public static final int DEFAULT_PADDING = 20;
         /*文字间距*/

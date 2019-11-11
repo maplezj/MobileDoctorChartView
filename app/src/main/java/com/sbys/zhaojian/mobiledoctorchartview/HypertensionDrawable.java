@@ -1,6 +1,10 @@
-package com.github.MDChartView.chatview;
+package com.sbys.zhaojian.mobiledoctorchartview;
 
 import android.content.Context;
+
+import com.github.MDChartView.chatview.ChartDetailDrawable;
+import com.github.MDChartView.chatview.ChartItem;
+import com.github.MDChartView.chatview.ChartView;
 
 /**
  * @author zhaojian

@@ -91,7 +91,7 @@ public abstract class ChartDetailDrawable extends Drawable
         }
         TextPaint paint = new TextPaint();
         paint.setTextAlign(Paint.Align.LEFT);
-        paint.setTextSize(34);
+        paint.setTextSize(ChartUtils.dpToPx(mContext,ChartView.ChartConfig.DEFAULT_FONT_SIZE));
         paint.setColor(Color.WHITE);
         //String message = "随访日期：2019-02-12\n血         压：110/88mmHg\n用药信息：头孢、埃斯皮里、感冒药、发烧药";
         StaticLayout myStaticLayout = new StaticLayout(createContent(), paint, calculateWidth(), Layout.Alignment.ALIGN_NORMAL, 1.2f, 0.0f, false);
@@ -113,7 +113,7 @@ public abstract class ChartDetailDrawable extends Drawable
 
     protected int calculateWidth()
     {
-        return (int) ChartUtils.dpToPx(mContext, 140);
+        return (int) ChartUtils.dpToPx(mContext, ChartUtils.dpToPx(mContext, 140));
     }
 
     @Override
