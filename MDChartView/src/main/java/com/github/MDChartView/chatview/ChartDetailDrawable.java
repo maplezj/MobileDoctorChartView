@@ -113,7 +113,7 @@ public abstract class ChartDetailDrawable extends Drawable
 
     protected int calculateWidth()
     {
-        return (int) ChartUtils.dpToPx(mContext, ChartUtils.dpToPx(mContext, 140));
+        return (int) ChartUtils.dpToPx(mContext, 140);
     }
 
     @Override
