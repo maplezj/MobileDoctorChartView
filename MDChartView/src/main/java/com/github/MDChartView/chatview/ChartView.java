@@ -262,6 +262,7 @@ public class ChartView extends View
         mChartConfig.init(mValueEntity, this);
         createDrawingPoint();
         drawWrapper(canvas);
+        drawNet(canvas);
         drawYUnit(canvas);
         drawXUnit(canvas);
         drawLine(canvas);
@@ -712,6 +713,35 @@ public class ChartView extends View
         path.moveTo(0, 0);
         path.lineTo(0, mChartConfig.chartHeight);
         path.lineTo(mChartConfig.chartWidth, mChartConfig.chartHeight);
+        canvas.drawPath(path, paint);
+    }
+
+    private void drawNet(Canvas canvas)
+    {
+        if (!mChartConfig.drawNet)
+        {
+            return;
+        }
+        Path path = new Path();
+        float xMove = mChartConfig.unitXDistance;
+        while (xMove <= mChartConfig.chartWidth)
+        {
+            path.moveTo(xMove,0);
+            path.lineTo(xMove,mChartConfig.chartHeight);
+            canvas.drawPath(path, paint);
+            xMove += mChartConfig.unitXDistance;
+        }
+
+        float yMove = mChartConfig.chartHeight;
+        while (yMove > 0)
+        {
+            path.moveTo(0, yMove);
+            path.lineTo(mChartConfig.chartWidth, yMove);
+            canvas.drawPath(path, paint);
+            yMove = yMove - mChartConfig.unitXDistance;
+        }
+        path.moveTo(0, 0);
+        path.lineTo(mChartConfig.chartWidth, 0);
         canvas.drawPath(path, paint);
     }
 
@@ -1227,6 +1257,7 @@ public class ChartView extends View
         private boolean drawNormalLinePoint = true;
         private boolean showFullScreen = true;
         private boolean standardLineCanPoint = false;
+        private boolean drawNet = false;
         /*y轴取最大值最小值时的缩放比例(取10，100，100)，默认取整，即不缩放*/
         private float scaleRate = 1;
         /*Y轴上显示的数值的格式*/
@@ -1518,6 +1549,13 @@ public class ChartView extends View
         public ChartConfigBuilder addStandLine(Float value, Integer color)
         {
             mChartConfig.standLineMap.put(value, color);
+            return this;
+        }
+
+        /*是否画网格*/
+        public ChartConfigBuilder drawNet(boolean draw)
+        {
+            mChartConfig.drawNet = draw;
             return this;
         }
 

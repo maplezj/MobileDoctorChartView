@@ -50,6 +50,7 @@ public class MainActivity extends Activity
                 //.setHighStandLineColor(R.color.colorAccent)
                 //.setLowStandLineColor(R.color.colorPrimary)
                 .standardLineCanPoint(true)
+                .drawNet(true)
                 .build());
 
         chartView.setOnClickPointListener(new ChartView.OnClickPointListener()
