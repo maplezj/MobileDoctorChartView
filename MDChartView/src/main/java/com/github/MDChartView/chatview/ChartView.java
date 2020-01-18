@@ -1373,7 +1373,11 @@ public class ChartView extends View
             if (!isInit && chartView.mChartItemListMap != null && !chartView.mChartItemListMap.isEmpty())
             {
                 isInit = true;
-                if (chartView.xShowCount > countX)
+                if (chartView.xShowCount == 1)
+                {
+                    xDistance = 0;
+                }
+                else if (chartView.xShowCount >= countX)
                 {
                     xDistance = (float) (chartWidth * (chartView.getMaxSize() - chartView.xShowCount) / (chartView.xShowCount - 1.0));
                 }
