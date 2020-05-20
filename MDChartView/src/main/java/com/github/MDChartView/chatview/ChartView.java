@@ -940,7 +940,7 @@ public class ChartView extends View
         paint.setColor(COLOR_TEXT);
         if (!TextUtils.isEmpty(mChartConfig.unitXText))
         {
-            canvas.drawText(mChartConfig.unitXText, mChartConfig.chartWidth + +mChartConfig.fontWidthX / 2 + ChartConfig.FONT_PADDING, mChartConfig.fontHeightX, paint);
+            canvas.drawText(mChartConfig.unitXText, mChartConfig.chartWidth + ChartConfig.FONT_PADDING, mChartConfig.fontHeightX, paint);
         }
         paint.setTextAlign(Paint.Align.CENTER);
         canvas.saveLayer(-mChartConfig.fontWidthX / 2, -ChartConfig.DEFAULT_PADDING - mChartConfig.chartHeight - mChartConfig.fontHeightX,
