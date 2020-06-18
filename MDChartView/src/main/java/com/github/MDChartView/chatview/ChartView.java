@@ -857,9 +857,9 @@ public class ChartView extends View
     private void drawPointDetail(Canvas canvas, float x, float y, float scale, int dataType, int index)
     {
         setPaintColorByType(dataType);
-        canvas.drawCircle(x, y, 12 * scale, paint);
+        canvas.drawCircle(x, y, ChartUtils.dpToPx(getContext(), 4) * scale, paint);
         paint.setColor(Color.WHITE);
-        canvas.drawCircle(x, y, 6 * scale, paint);
+        canvas.drawCircle(x, y, ChartUtils.dpToPx(getContext(), 2) * scale, paint);
     }
 
     /*坐标的圆点是否要放大*/
